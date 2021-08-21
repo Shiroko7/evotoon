@@ -1,10 +1,10 @@
-from typing import Callable, List, Tuple
-
 import random
+import subprocess
+from typing import Callable, List, Tuple
 
 import numpy as np
 
-import subprocess
+from data_classes import CatParam, FloatParam, IntParam
 
 
 def make_seed(seed: int = 765):
@@ -57,9 +57,9 @@ def latin_hypercube_sampling_cat(options: List[str], size: int) -> List:
 
 def initialization(
     poblation_size: int,
-    float_parameters_list: List[dict] = list(),
-    int_parameters_list: List[dict] = list(),
-    cat_parameters_list: List[dict] = list(),
+    float_parameters_list: List[FloatParam] = list(),
+    int_parameters_list: List[IntParam] = list(),
+    cat_parameters_list: List[CatParam] = list(),
 ) -> List[dict]:
     """
     creates the initial solutions for the tunning process.
@@ -69,27 +69,27 @@ def initialization(
     parameter_list = list()
     for param in float_parameters_list:
         points = latin_hypercube_sampling_num(
-            min_val=param["min_val"],
-            max_val=param["max_val"],
+            min_val=param.min_val,
+            max_val=param.max_val,
             size=poblation_size,
             dtype=np.float64,
         )
 
-        parameter_list.append((param["name"], points))
+        parameter_list.append((param.name, points))
 
     for param in int_parameters_list:
         points = latin_hypercube_sampling_num(
-            min_val=param["min_val"],
-            max_val=param["max_val"],
+            min_val=param.min_val,
+            max_val=param.max_val,
             size=poblation_size,
             dtype=np.int32,
         )
 
-        parameter_list.append((param["name"], points))
+        parameter_list.append((param.name, points))
 
     for param in cat_parameters_list:
-        points = latin_hypercube_sampling_cat(param["values"], poblation_size)
-        parameter_list.append((param["name"], points))
+        points = latin_hypercube_sampling_cat(param.values, poblation_size)
+        parameter_list.append((param.name, points))
 
     # reshape
     initial_poblation = list()
@@ -141,6 +141,3 @@ def naive_tunning(
             best_conf = conf
 
     return best_conf, best_perf
-
-
-
