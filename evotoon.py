@@ -103,26 +103,39 @@ def initialization(
 
 
 def execute_ILSMKP(
-    executable_path: str,
-    instance_path: str,
+    instance: str,
     seed: int,
+    executable_path: str,
     evaluations: int,
     k: int,
 ) -> float:
     """
     function to execute ILSMKP program, it returns its output.
     """
-    cmd = [executable_path, instance_path, str(seed), str(evaluations), str(k)]
+    cmd = [executable_path, instance, str(seed), str(evaluations), str(k)]
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     output = float(result.stdout.decode("utf-8"))
     return output
 
 
-def configuration_evaluation(algorithm: Callable, **kwargs) -> float:
+def evaluate_results(result_list: List):
+    """
+    evaluate results, a simple mean for the time being
+    """
+    return sum(result_list) / len(result_list)
+
+
+def configuration_evaluation(
+    algorithm: Callable, instance_list: List, seed_list, **kwargs
+) -> float:
     """
     interface to call different algorithms to evaluate
     """
-    return algorithm(**kwargs)
+    result_list = [
+        algorithm(instance, seed, **kwargs)
+        for instance, seed in zip(instance_list, seed_list)
+    ]
+    return evaluate_results(result_list)
 
 
 def naive_tunning(
