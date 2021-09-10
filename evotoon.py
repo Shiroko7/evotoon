@@ -23,12 +23,16 @@ def latin_hypercube_sampling_num(min_val, max_val, size, dtype) -> List:
     partition = np.linspace(
         start=min_val, stop=max_val, num=size + 1, dtype=dtype
     )
+
     low = partition[:size]
     high = partition[1 : size + 1]
 
     if dtype == np.float64:
         points = np.random.uniform(low=low, high=high, size=size)
     elif dtype == np.int32:
+        if max_val - min_val <= size:
+            low = min_val
+            high = max_val
         points = np.random.randint(low=low, high=high, size=size)
 
     np.random.shuffle(points)
@@ -57,9 +61,9 @@ def latin_hypercube_sampling_cat(options: List[str], size: int) -> List:
 
 def initialization(
     poblation_size: int,
-    float_parameters_list: List[FloatParam] = list(),
-    int_parameters_list: List[IntParam] = list(),
-    cat_parameters_list: List[CatParam] = list(),
+    float_parameters_list: List[FloatParam] = [],
+    int_parameters_list: List[IntParam] = [],
+    cat_parameters_list: List[CatParam] = [],
 ) -> List[dict]:
     """
     creates the initial solutions for the tunning process.
@@ -117,6 +121,26 @@ def execute_ILSMKP(
     output = float(result.stdout.decode("utf-8"))
     return output
 
+def execute_AntKnapsack(
+    instance: str,
+    seed: int,
+    executable_path: str,
+    evaluations: int,
+    total_ants: int,
+    alpha: float,
+    beta: float,
+    tau_max: float,
+    tau_min: float,
+    rho: float
+) -> float:
+    """
+    function to execute AntKnapsackClean-master program, it returns its output.
+    """
+    cmd = [executable_path, instance, str(seed), str(total_ants), str(evaluations), str(alpha), str(beta), str(tau_max), str(tau_min), str(rho)]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE)
+    output = float(result.stdout.decode("utf-8"))
+    return output
+
 
 def evaluate_results(result_list: List):
     """
@@ -154,3 +178,5 @@ def naive_tunning(
             best_conf = conf
 
     return best_conf, best_perf
+
+
