@@ -3,6 +3,10 @@ import subprocess
 from typing import Callable, List, Tuple
 
 import numpy as np
+import tensorflow as tf
+from keras.layers import Dense
+from keras.models import Sequential
+from tensorflow.keras.layers.experimental import preprocessing
 
 from data_classes import CatParam, FloatParam, IntParam
 
@@ -13,6 +17,7 @@ def make_seed(seed: int = 765):
     """
     random.seed(seed)
     np.random.seed(seed)
+
     return seed
 
 
@@ -119,6 +124,7 @@ def execute_ILSMKP(
     cmd = [executable_path, instance, str(seed), str(evaluations), str(k)]
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     output = float(result.stdout.decode("utf-8"))
+
     return output
 
 def execute_AntKnapsack(
@@ -139,7 +145,7 @@ def execute_AntKnapsack(
     cmd = [executable_path, instance, str(seed), str(total_ants), str(evaluations), str(alpha), str(beta), str(tau_max), str(tau_min), str(rho)]
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     output = float(result.stdout.decode("utf-8"))
-    return output
+    return output * -1
 
 
 def evaluate_results(result_list: List):
@@ -159,6 +165,7 @@ def configuration_evaluation(
         algorithm(instance, seed, **kwargs)
         for instance, seed in zip(instance_list, seed_list)
     ]
+
     return evaluate_results(result_list)
 
 
@@ -176,7 +183,46 @@ def naive_tunning(
         if perf > best_perf:
             best_perf = perf
             best_conf = conf
-
+            
     return best_conf, best_perf
 
 
+def evaluate_batch(batch: List[dict], algorithm: Callable, **kwargs) -> list:
+    """
+    given a batch of configurations and the algorithm to evaluate them
+    this function returns a numpy array with its corresponding performing values
+    """
+    return np.array([configuration_evaluation(algorithm, **{**conf, **kwargs}) for conf in batch])
+
+
+def create_model(X: list):
+    """
+    This function creates the model to be used for tunning
+    """
+    # Create model
+    normalizer = preprocessing.Normalization(axis=-1)
+    normalizer.adapt(np.array(X))
+
+    model = Sequential()
+    model.add(normalizer)
+    model.add(Dense(8, activation='relu'))
+    model.add(Dense(4, activation='relu'))
+    model.add(Dense(units=1))
+    # Compile model
+    model.compile(loss='mean_squared_error', optimizer="adam")
+    return model
+
+
+def generate_configurations(X: list, float_params: List[FloatParam]) -> list:
+    """
+    Generates new configurations by mutating two random genes with a random value.
+    """
+    generated_X = []
+    for conf in X:
+        mutated_gen_1 = random.randint(0, len(float_params)-1)
+        mutated_gen_2 = random.randint(0, len(float_params)-1)
+        mutation = np.copy(conf)
+        mutation[mutated_gen_1] = random.uniform(float_params[mutated_gen_1].min_val, float_params[mutated_gen_1].max_val)
+        mutation[mutated_gen_2] = random.uniform(float_params[mutated_gen_2].min_val, float_params[mutated_gen_2].max_val)
+        generated_X.append(mutation)
+    return  np.array(generated_X)

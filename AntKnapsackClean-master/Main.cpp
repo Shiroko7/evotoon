@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 	DefineInitial();
 	//PrintInstancia();
 	ACO();
-	cout << 100*(Opt - BestFitnessFound)/Opt << endl;
+	cout << 100 * (Opt - BestFitnessFound)/Opt << endl;
 
 	return 0;
 }
