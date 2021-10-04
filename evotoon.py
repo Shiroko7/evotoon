@@ -1,9 +1,11 @@
 import random
 import subprocess
-from typing import Callable, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 import numpy as np
 import tensorflow as tf
+import pandas as pd
+
 from keras.layers import Dense
 from keras.models import Sequential
 from tensorflow.keras.layers.experimental import preprocessing
@@ -161,38 +163,25 @@ def configuration_evaluation(
     """
     interface to call different algorithms to evaluate
     """
+    evaluation_keys = ["instance_name", "seed", "score"]
     result_list = [
-        algorithm(instance, seed, **kwargs)
+        [instance, seed, algorithm(instance, seed, **kwargs)]
         for instance, seed in zip(instance_list, seed_list)
     ]
 
-    return evaluate_results(result_list)
+    return pd.DataFrame(columns=evaluation_keys, data=result_list)
 
 
-def naive_tunning(
-    algorithm: Callable, configurations: List[dict], **kwargs
-) -> Tuple[List, float]:
-    """
-    simple method to choose the best configuration given a list of configurations
-    """
-    best_conf = configurations[0]
-    best_perf = -1.0
-    for conf in configurations:
-        perf = configuration_evaluation(algorithm, **{**conf, **kwargs})
-        print(conf, perf)
-        if perf > best_perf:
-            best_perf = perf
-            best_conf = conf
-            
-    return best_conf, best_perf
-
-
-def evaluate_batch(batch: List[dict], algorithm: Callable, **kwargs) -> list:
+def evaluate_batch(batch: pd.DataFrame, batch_evaluations: Dict[int, pd.DataFrame], algorithm: Callable, **kwargs) -> Dict[int, pd.DataFrame]:
     """
     given a batch of configurations and the algorithm to evaluate them
     this function returns a numpy array with its corresponding performing values
     """
-    return np.array([configuration_evaluation(algorithm, **{**conf, **kwargs}) for conf in batch])
+
+    for idx, conf in batch.iterrows():
+        batch_evaluations[idx] = configuration_evaluation(algorithm, **{**dict(conf), **kwargs})
+
+    return batch_evaluations
 
 
 def create_model(X: list):
@@ -226,3 +215,21 @@ def generate_configurations(X: list, float_params: List[FloatParam]) -> list:
         mutation[mutated_gen_2] = random.uniform(float_params[mutated_gen_2].min_val, float_params[mutated_gen_2].max_val)
         generated_X.append(mutation)
     return  np.array(generated_X)
+
+
+def naive_tunning(
+    algorithm: Callable, configurations: List[dict], **kwargs
+) -> Tuple[List, float]:
+    """
+    simple method to choose the best configuration given a list of configurations
+    """
+    best_conf = configurations[0]
+    best_perf = -1.0
+    for conf in configurations:
+        perf = configuration_evaluation(algorithm, **{**conf, **kwargs})
+        print(conf, perf)
+        if perf > best_perf:
+            best_perf = perf
+            best_conf = conf
+            
+    return best_conf, best_perf
