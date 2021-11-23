@@ -15,6 +15,7 @@ class FloatParam:
     name: str
     min_val: float
     max_val: float
+    decs: int
 
 
 @dataclass

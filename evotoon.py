@@ -1,5 +1,6 @@
 import random
 import subprocess
+import math
 from typing import Callable, Dict, List, Tuple
 
 import numpy as np
@@ -11,6 +12,19 @@ from keras.models import Sequential
 from tensorflow.keras.layers.experimental import preprocessing
 
 from data_classes import CatParam, FloatParam, IntParam
+from scipy.stats import friedmanchisquare
+
+import scikit_posthocs as sp
+
+def trunc_array(array: list, decs=0):
+    """
+    Function to truncate a numpy array
+    """
+    return np.trunc(array*10**decs)/(10**decs)
+
+def trun_float(number, decs=0) -> float:
+    step = 10.0 ** decs
+    return math.trunc(step * number) / step
 
 
 def make_seed(seed: int = 765):
@@ -23,7 +37,7 @@ def make_seed(seed: int = 765):
     return seed
 
 
-def latin_hypercube_sampling_num(min_val, max_val, size, dtype) -> List:
+def latin_hypercube_sampling_num(min_val, max_val, size, dtype, decs = 0) -> List:
     """
     creates a latin hypercube sampling for numeric values.
     """
@@ -36,6 +50,8 @@ def latin_hypercube_sampling_num(min_val, max_val, size, dtype) -> List:
 
     if dtype == np.float64:
         points = np.random.uniform(low=low, high=high, size=size)
+        if decs != 0:
+            points = trunc_array(points, decs)
     elif dtype == np.int32:
         if max_val - min_val <= size:
             low = min_val
@@ -84,6 +100,7 @@ def initialization(
             max_val=param.max_val,
             size=poblation_size,
             dtype=np.float64,
+            decs=param.decs
         )
 
         parameter_list.append((param.name, points))
@@ -202,19 +219,115 @@ def create_model(X: list):
     return model
 
 
-def generate_configurations(X: list, float_params: List[FloatParam]) -> list:
+# def generate_configurations(model, index_start = 0, **kwargs) -> list:
+#     """
+#     Generates new configurations by selecting random configurations
+#     """
+#     poblation_size = kwargs["poblation_size"]
+#     generated_X = pd.DataFrame(initialization(**kwargs))
+
+#     A = model.predict(generated_X.values)
+#     #A = np.squeeze(model.predict(generated_X))
+#     #top_80 = np.percentile(A, 80)
+#     #generated_X = generated_X[np.squeeze(np.argwhere(A > top_80))]
+#     partition_A = np.argpartition(A[:, -1], -poblation_size//2)[-poblation_size//2:]
+#     generated_x = generated_X.filter(items = partition_A, axis=0).reset_index(drop=True)
+#     if index_start != 0:
+#         generated_x.index = generated_x.index + index_start
+#     return generated_x 
+
+
+def generate_configurations(model, batch, all_params, index_start = 0) -> list:
     """
     Generates new configurations by mutating two random genes with a random value.
     """
-    generated_X = []
-    for conf in X:
-        mutated_gen_1 = random.randint(0, len(float_params)-1)
-        mutated_gen_2 = random.randint(0, len(float_params)-1)
-        mutation = np.copy(conf)
-        mutation[mutated_gen_1] = random.uniform(float_params[mutated_gen_1].min_val, float_params[mutated_gen_1].max_val)
-        mutation[mutated_gen_2] = random.uniform(float_params[mutated_gen_2].min_val, float_params[mutated_gen_2].max_val)
-        generated_X.append(mutation)
-    return  np.array(generated_X)
+    generated_X = pd.DataFrame()
+
+    max_tries = 5
+    p_worse = 0.25
+    for _, conf in batch.iterrows():
+        # Select random parameter
+        random_choice = random.randint(0, len(batch.columns)-1)
+        param = all_params[batch.columns[random_choice]]
+        n_conf = conf.copy()
+        prediction = model.predict(np.array([n_conf.values]))[0][0]
+        
+        # Explore its neighbour by randomly changing it
+        look_choice = random.uniform(0,1)
+        for _ in range(max_tries):
+            if isinstance(param, IntParam):
+                n_conf[random_choice] = random.randint(param.min_val, param.max_val)
+            elif isinstance(param, FloatParam):
+                n_conf[random_choice] = random.uniform(param.min_val, param.max_val)
+                # truncate
+                n_conf[random_choice] = trun_float(n_conf[random_choice], param.decs)
+            else:
+                choice = random.randint(0, len(param.values)-1)
+                n_conf[random_choice] = param.values[choice]
+            n_prediction = model.predict(np.array([n_conf.values]))[0][0]
+
+            # Until we find a first expected (predicted) improvement
+            if look_choice >  p_worse:
+                if n_prediction >= prediction: 
+                    break
+            # Controled by chance of prefering worse solutions for diversification 
+            else:
+                if n_prediction <= prediction: 
+                    break	
+
+        generated_X = generated_X.append(n_conf, ignore_index=True)
+
+    if index_start != 0:
+        generated_X.index = generated_X.index + index_start
+    return generated_X 
+
+
+def select_configurations_by_ranking(batch, batch_evaluations, generated_X, generated_evaluations, instance_list, poblation_size, friedman_test = True):
+    total_evaluations = {**batch_evaluations, **generated_evaluations}
+
+    cols = ["instance_name"] + [f"conf_{idx}" for idx in total_evaluations]
+
+    df = pd.DataFrame(columns=cols)
+    for instance_name in instance_list:
+        evaluation_dict = {f"conf_{idx}": total_evaluations[idx].loc[total_evaluations[idx]["instance_name"] == instance_name]["score"].mean() for idx in total_evaluations}
+        new_row = {**{"instance_name":instance_name}, **evaluation_dict}
+        df = df.append(new_row, ignore_index=True)
+    df = df.rank(axis=1, numeric_only=True)
+
+    if friedman_test:
+        # compare samples
+        args = tuple(df[conf] for conf in df)
+        stat, p = friedmanchisquare(*args)
+
+        # interpret
+        alpha = 0.05
+        if p < alpha:
+            # Different distributions (reject H0)
+            posthoc_matrix = sp.posthoc_conover(pd.melt(df, var_name="configuration", value_name="rank"), val_col='rank', group_col='configuration', p_adjust = 'holm')
+            different_dists = posthoc_matrix.index[posthoc_matrix[df.sum().idxmax()] < 0.05].tolist()
+            df.drop(different_dists, axis=1, inplace=True)
+
+
+    best_confs = df.sum().nlargest(poblation_size)
+    best_indexes = [int(idx.replace("conf_", "")) for idx, *_ in best_confs.iteritems()]
+
+    batch = pd.concat([batch,generated_X]).filter(best_indexes, axis=0).reset_index(drop=True)
+    batch_evaluations = { j: total_evaluations[idx] for j, idx in enumerate(best_indexes) }
+
+    return batch, batch_evaluations
+
+
+def select_configurations_by_mean(batch_evaluations, generated_evaluations):
+    total_evaluations = {**batch_evaluations, **generated_evaluations}
+
+    total_score = np.array([total_evaluations[i]["score"].mean() for i in total_evaluations])
+    best_indexes = np.argpartition(total_score, -poblation_size)[-poblation_size:]
+
+    batch = pd.concat([batch,generated_X]).filter(best_indexes, axis=0).reset_index(drop=True)
+    batch_evaluations = { j: total_evaluations[idx] for j, idx in enumerate(best_indexes) }
+    return batch, batch_evaluations
+
+
 
 
 def naive_tunning(
@@ -233,3 +346,60 @@ def naive_tunning(
             best_conf = conf
             
     return best_conf, best_perf
+
+
+
+
+def evo_tunning(all_params, budget, poblation_size, update_cycle, initial_batch, **function_kwargs):
+    # EVALUATE BATCH
+    # Make inputs / outputs
+    batch = pd.DataFrame(initial_batch)
+    evaluation_keys = ["instance_name", "seed", "score"]
+    batch_evaluations = {idx:pd.DataFrame(columns=evaluation_keys) for idx, *_ in batch.iterrows()}
+    batch_evaluations = evaluate_batch(batch, batch_evaluations, execute_AntKnapsack, **function_kwargs)
+
+    X = batch.values
+    y = np.array([batch_evaluations[i]["score"].mean() for i in batch_evaluations])
+
+    # Create model (this should consider the instance label)
+    model = create_model(X)
+    history = model.fit(X, y, epochs=50, verbose=0, validation_split = 0.2)
+
+    # Set queue to update
+    reserve_X = pd.DataFrame()
+    reserve_y = np.array([])
+
+    for i in range(1, budget):
+        # Generate new random configurations
+        generated_X = generate_configurations(model, batch, all_params, poblation_size)
+        # Evaluate them
+        generated_evaluations = {idx:pd.DataFrame(columns=evaluation_keys) for idx in range(poblation_size, poblation_size + len(generated_X))}
+        generated_evaluations = evaluate_batch(generated_X, generated_evaluations, execute_AntKnapsack, **function_kwargs)
+        generated_y = np.array([generated_evaluations[i]["score"].mean() for i in generated_evaluations])
+
+        # Update model
+        update = i % update_cycle == 0
+        if update:
+            history = model.fit(reserve_X, reserve_y, epochs=50, verbose=0, validation_split = 0.2)
+            reserve_X = pd.DataFrame()
+            reserve_y = np.array([])
+        else:
+            reserve_X = pd.concat([reserve_X, generated_X]).reset_index(drop=True)
+            reserve_y = np.concatenate((reserve_y, generated_y))
+
+        # Select configurations for next step	
+        batch, batch_evaluations = select_configurations_by_ranking(batch, batch_evaluations, generated_X, generated_evaluations, function_kwargs["instance_list"], poblation_size, friedman_test = True)
+
+        # Fill if we don't have enough solutions
+        if len(batch) < poblation_size:
+            fillers = initialize(poblation_size - len(batch), float_param, int_param)
+            fillers_evaluations = {idx:pd.DataFrame(columns=evaluation_keys) for idx in range(poblation_size - len(batch), poblation_size)} 
+            fillers_evaluations = evaluate_batch(fillers, fillers_evaluations, execute_AntKnapsack, **function_kwargs)
+
+            batch = pd.concat([batch,fillers]).reset_index(drop=True)
+            batch_evaluations = {**batch_evaluations, **fillers_evaluations}
+
+    batch["OPTIMAL DIFF"] =  np.array([batch_evaluations[i]["score"].mean() for i in batch_evaluations]) * -1
+    batch = batch.sort_values(by=["OPTIMAL DIFF"])
+
+    return batch
