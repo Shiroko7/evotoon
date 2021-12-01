@@ -201,17 +201,17 @@ def evaluate_batch(batch: pd.DataFrame, batch_evaluations: Dict[int, pd.DataFram
     return batch_evaluations
 
 
-def create_model(X: list):
+def create_model(X_array: list):
     """
     This function creates the model to be used for tunning
     """
     # Create model
-    normalizer = preprocessing.Normalization(axis=-1)
-    normalizer.adapt(np.array(X))
+    normalizer = preprocessing.Normalization(axis=-1, input_shape=[X_array.shape[1],])
+    normalizer.adapt(X_array)
 
     model = Sequential()
     model.add(normalizer)
-    model.add(Dense(8, activation='relu'))
+    model.add(Dense(8, activation='relu', input_shape=X_array.shape))
     model.add(Dense(4, activation='relu'))
     model.add(Dense(units=1))
     # Compile model
@@ -350,13 +350,13 @@ def naive_tunning(
 
 
 
-def evo_tunning(all_params, budget, poblation_size, update_cycle, initial_batch, **function_kwargs):
+def evo_tunning(all_params, budget, poblation_size, update_cycle, initial_batch, execute_algorithm, returning_type="RAW_VALUE", **function_kwargs):
     # EVALUATE BATCH
     # Make inputs / outputs
     batch = pd.DataFrame(initial_batch)
     evaluation_keys = ["instance_name", "seed", "score"]
     batch_evaluations = {idx:pd.DataFrame(columns=evaluation_keys) for idx, *_ in batch.iterrows()}
-    batch_evaluations = evaluate_batch(batch, batch_evaluations, execute_AntKnapsack, **function_kwargs)
+    batch_evaluations = evaluate_batch(batch, batch_evaluations, execute_algorithm, **function_kwargs)
 
     X = batch.values
     y = np.array([batch_evaluations[i]["score"].mean() for i in batch_evaluations])
@@ -374,7 +374,7 @@ def evo_tunning(all_params, budget, poblation_size, update_cycle, initial_batch,
         generated_X = generate_configurations(model, batch, all_params, poblation_size)
         # Evaluate them
         generated_evaluations = {idx:pd.DataFrame(columns=evaluation_keys) for idx in range(poblation_size, poblation_size + len(generated_X))}
-        generated_evaluations = evaluate_batch(generated_X, generated_evaluations, execute_AntKnapsack, **function_kwargs)
+        generated_evaluations = evaluate_batch(generated_X, generated_evaluations, execute_algorithm, **function_kwargs)
         generated_y = np.array([generated_evaluations[i]["score"].mean() for i in generated_evaluations])
 
         # Update model
@@ -394,12 +394,14 @@ def evo_tunning(all_params, budget, poblation_size, update_cycle, initial_batch,
         if len(batch) < poblation_size:
             fillers = initialize(poblation_size - len(batch), float_param, int_param)
             fillers_evaluations = {idx:pd.DataFrame(columns=evaluation_keys) for idx in range(poblation_size - len(batch), poblation_size)} 
-            fillers_evaluations = evaluate_batch(fillers, fillers_evaluations, execute_AntKnapsack, **function_kwargs)
+            fillers_evaluations = evaluate_batch(fillers, fillers_evaluations, execute_algorithm, **function_kwargs)
 
             batch = pd.concat([batch,fillers]).reset_index(drop=True)
             batch_evaluations = {**batch_evaluations, **fillers_evaluations}
 
-    batch["OPTIMAL DIFF"] =  np.array([batch_evaluations[i]["score"].mean() for i in batch_evaluations]) * -1
-    batch = batch.sort_values(by=["OPTIMAL DIFF"])
+    batch["VALUE"] =  np.array([batch_evaluations[i]["score"].mean() for i in batch_evaluations])
+    if returning_type == "ABSOLUTE_OPTIMAL_DIFF":
+        batch["VALUE"] = batch["VALUE"] * -1
+    batch = batch.sort_values(by=["VALUE"])
 
     return batch
