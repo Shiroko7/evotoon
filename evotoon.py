@@ -163,8 +163,25 @@ def execute_AntKnapsack(
     """
     cmd = [executable_path, instance, str(seed), str(total_ants), str(evaluations), str(alpha), str(beta), str(tau_max), str(tau_min), str(rho)]
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
-    print(result)
-    print(result.stdout.decode("utf-8"))
+    output = float(result.stdout.decode("utf-8"))
+    return output * -1
+
+def execute_CodGA(
+    instance: str,
+    output: str,
+    seed: int,
+    executable_path: str,
+    p_c: float,
+    p_m: float,
+    N: int,
+    t_max: int,
+    c_0: int,
+) -> float:
+    """
+    executing CodGA program, returning its output (optimal diff)
+    """
+    cmd = [executable_path, instance, output, str(p_c), str(p_m), str(N), str(t_max), str(seed), str(c_0)]
+    result = subprocess.run(cmd, stdout=subprocess.PIPE)
     output = float(result.stdout.decode("utf-8"))
     return output * -1
 
