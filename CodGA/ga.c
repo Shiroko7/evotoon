@@ -321,7 +321,8 @@ int ga(int N,
   freePopulation(o,N);
 
   double opt_diff = 100 * (nk_instance->optimum - best_f) / nk_instance->optimum;
-  printf("%f", opt_diff);
+  printf("%f\n", opt_diff);
+  return 0;
   /*
   FILE *output;
   output = fopen(output_file,"a");

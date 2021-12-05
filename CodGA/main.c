@@ -97,6 +97,5 @@ int main(int argc, char **argv)
   ga(N,t_max,p_c,p_m,&nk_instance, output_file, c_o);  
 
   /* -------------------------------------- */
-
   return 0;
 }

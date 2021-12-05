@@ -168,7 +168,6 @@ def execute_AntKnapsack(
 
 def execute_CodGA(
     instance: str,
-    output: str,
     seed: int,
     executable_path: str,
     p_c: float,
@@ -176,6 +175,7 @@ def execute_CodGA(
     N: int,
     t_max: int,
     c_0: int,
+    output: str,
 ) -> float:
     """
     executing CodGA program, returning its output (optimal diff)
