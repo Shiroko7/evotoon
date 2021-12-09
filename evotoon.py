@@ -15,6 +15,7 @@ from data_classes import CatParam, FloatParam, IntParam
 from scipy.stats import friedmanchisquare
 
 import scikit_posthocs as sp
+import os
 
 def trunc_array(array: list, decs=0):
     """
@@ -35,6 +36,26 @@ def make_seed(seed: int = 765):
     np.random.seed(seed)
 
     return seed
+
+
+def choose_instances(path: str, n:int, seed: int):
+    instance_list = []
+    for file in sorted(os.listdir(path)):
+        if file != ".DS_Store":
+            instances = sorted(os.listdir(os.path.join(path,file)))
+            instances = [os.path.join(path, file, ins) for ins in instances]
+            instance_list += random.sample(instances, n) 
+    return instance_list
+
+
+def select_seeds(instance_list:list, n_seeds: int, base_seed: int):
+    new_instance_list = []
+    seed_list = []
+    for instance in instance_list:
+        for i in range(n_seeds):
+            new_instance_list.append(instance)
+            seed_list.append(base_seed+i)
+    return new_instance_list, seed_list
 
 
 def latin_hypercube_sampling_num(min_val, max_val, size, dtype, decs = 0) -> List:
@@ -182,7 +203,12 @@ def execute_CodGA(
     """
     cmd = [executable_path, instance, output, str(p_c), str(p_m), str(N), str(t_max), str(seed), str(c_0)]
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
-    output = float(result.stdout.decode("utf-8"))
+    try:
+        output = float(result.stdout.decode("utf-8"))
+    except Exception:
+        print(cmd)
+        raise ValueError
+
     return output * -1
 
 
@@ -369,13 +395,15 @@ def naive_tunning(
 
 
 
-def evo_tunning(all_params, budget, poblation_size, update_cycle, initial_batch, execute_algorithm, returning_type="RAW_VALUE", **function_kwargs):
+def evo_tunning(all_params, budget, poblation_size, initial_batch, execute_algorithm, returning_type="RAW_VALUE", float_params = None, int_params = None, cat_params = None, **function_kwargs):
     # EVALUATE BATCH
     # Make inputs / outputs
     batch = pd.DataFrame(initial_batch)
     evaluation_keys = ["instance_name", "seed", "score"]
     batch_evaluations = {idx:pd.DataFrame(columns=evaluation_keys) for idx, *_ in batch.iterrows()}
     batch_evaluations = evaluate_batch(batch, batch_evaluations, execute_algorithm, **function_kwargs)
+
+    cur_budget = budget - len(batch) * len(function_kwargs["seed_list"])
 
     X = batch.values
     y = np.array([batch_evaluations[i]["score"].mean() for i in batch_evaluations])
@@ -388,32 +416,38 @@ def evo_tunning(all_params, budget, poblation_size, update_cycle, initial_batch,
     reserve_X = pd.DataFrame()
     reserve_y = np.array([])
 
-    for i in range(1, budget):
+    while cur_budget > 0:
+        print(cur_budget)
         # Generate new random configurations
         generated_X = generate_configurations(model, batch, all_params, poblation_size)
         # Evaluate them
         generated_evaluations = {idx:pd.DataFrame(columns=evaluation_keys) for idx in range(poblation_size, poblation_size + len(generated_X))}
         generated_evaluations = evaluate_batch(generated_X, generated_evaluations, execute_algorithm, **function_kwargs)
+
+        cur_budget = cur_budget -  len(generated_X) * len(function_kwargs["seed_list"])
+
         generated_y = np.array([generated_evaluations[i]["score"].mean() for i in generated_evaluations])
 
         # Update model
-        update = i % update_cycle == 0
-        if update:
-            history = model.fit(reserve_X, reserve_y, epochs=50, verbose=0, validation_split = 0.2)
+        #update = i % update_cycle == 0
+        if cur_budget > budget / 2:
+            history = model.fit(generated_X, generated_y, epochs=50, verbose=0, validation_split = 0.2)
             reserve_X = pd.DataFrame()
             reserve_y = np.array([])
-        else:
-            reserve_X = pd.concat([reserve_X, generated_X]).reset_index(drop=True)
-            reserve_y = np.concatenate((reserve_y, generated_y))
+        # else:
+        #     reserve_X = pd.concat([reserve_X, generated_X]).reset_index(drop=True)
+        #     reserve_y = np.concatenate((reserve_y, generated_y))
 
         # Select configurations for next step	
         batch, batch_evaluations = select_configurations_by_ranking(batch, batch_evaluations, generated_X, generated_evaluations, function_kwargs["instance_list"], poblation_size, friedman_test = True)
 
         # Fill if we don't have enough solutions
         if len(batch) < poblation_size:
-            fillers = initialize(poblation_size - len(batch), float_param, int_param)
+            fillers = pd.DataFrame(initialization(poblation_size - len(batch), float_params, int_params, cat_params))
             fillers_evaluations = {idx:pd.DataFrame(columns=evaluation_keys) for idx in range(poblation_size - len(batch), poblation_size)} 
             fillers_evaluations = evaluate_batch(fillers, fillers_evaluations, execute_algorithm, **function_kwargs)
+
+            cur_budget = cur_budget -  len(fillers) * len(function_kwargs["seed_list"])
 
             batch = pd.concat([batch,fillers]).reset_index(drop=True)
             batch_evaluations = {**batch_evaluations, **fillers_evaluations}

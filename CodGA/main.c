@@ -87,13 +87,32 @@ int main(int argc, char **argv)
   if(N%2 != 0)
       N=N+1;
   t_max = (int)(atof(argv[6])/N);
-  
+
   c_o = atoi(argv[8]);
   if(c_o < 1 || c_o > 2)
     printf("ERROR en seleccion operador de cruzamiento\n");
   /*printf("c_o: %d\n", c_o);*/
-  
-  
+
+  /*
+  printf("arg0: %s\n", argv[0]);
+  printf("nk_instance: %s\n", argv[1]);
+  printf("output: %s\n", argv[2]);
+  printf("p_c: %s\n", argv[3]);
+  printf("p_m: %s\n", argv[4]);
+  printf("N: %s\n", argv[5]);
+  printf("arg6: %s\n", argv[6]);
+  printf("t_max: %d\n", t_max);
+  printf("seed: %s\n", argv[7]);
+  printf("c_o: %s\n", argv[8]);
+
+    p_c: %f,
+     p_m: %f,
+      N: %d,
+       6: %s, 
+       t_max: %d, 
+       c_0: %d"
+       , atof(argv[0]), argv[1], output_file, p_c, p_m, N, argv[6], t_max, c_o);
+*/
   ga(N,t_max,p_c,p_m,&nk_instance, output_file, c_o);  
 
   /* -------------------------------------- */

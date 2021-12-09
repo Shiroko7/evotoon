@@ -296,7 +296,6 @@ int ga(int N,
   generatePopulation(p,N,n);
   evaluatePopulation(p,f,N,n,&best_f,nk_instance);
   num_evals=N;
-
   t=0;
   /*print_status(t,best_f);*/
   while (!done(best_f,t,t_max,nk_instance))
@@ -320,7 +319,13 @@ int ga(int N,
   freePopulation(s,N);
   freePopulation(o,N);
 
-  double opt_diff = 100 * (nk_instance->optimum - best_f) / nk_instance->optimum;
+
+  double opt_diff;
+  if (t_max != 0) {
+    opt_diff = 100 * (1 - ((t_max - t) / t_max));
+  } else {
+    opt_diff = 100;
+  }
   printf("%f\n", opt_diff);
   return 0;
   /*
