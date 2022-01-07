@@ -86,7 +86,7 @@ int main(int argc, char **argv)
   N = atoi(argv[5]);
   if(N%2 != 0)
       N=N+1;
-  t_max = (int)(atof(argv[6])/N);
+  t_max = atoi(argv[6]);/*(int)(atof(argv[6])/N);*/
 
   c_o = atoi(argv[8]);
   if(c_o < 1 || c_o > 2)

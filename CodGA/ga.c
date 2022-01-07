@@ -320,16 +320,18 @@ int ga(int N,
   freePopulation(o,N);
 
 
-  double opt_diff;
-  if (t_max != 0) {
-    opt_diff = 100 * (1 - ((t_max - t) / t_max));
-  } else {
+  float opt_diff;
+  if (t_max == 0) {
     opt_diff = 100;
+  } else {
+    float diff = (t_max - t);
+    float div = diff/t_max;
+    opt_diff = 100 * (1 - div);
   }
   printf("%f\n", opt_diff);
   return 0;
   /*
-  FILE *output;
+  file *output;
   output = fopen(output_file,"a");
   int tuning=0;
   int testing=1-tuning;
@@ -338,21 +340,21 @@ int ga(int N,
 
 
   if (is_optimal_nk(nk_instance,best_f)){
-      printf("Success: n=%d, N=%d, num_gens=%d, num_evals=%d\n",n,N,t,num_evals);
+      printf("success: n=%d, n=%d, num_gens=%d, num_evals=%d\n",n,n,t,num_evals);
       if(testing)
-	      fprintf(output, "1 %d %d %d %d\n",n,N,t,num_evals);
-      printf("Success: n=%d, N=%d, num_gens=%d, num_evals=%d\n",n,N,t,num_evals)
+	      fprintf(output, "1 %d %d %d %d\n",n,n,t,num_evals);
+      printf("success: n=%d, n=%d, num_gens=%d, num_evals=%d\n",n,n,t,num_evals)
       return 1;
   } else {
     if (nk_instance->optimum_defined) {
-	    printf("Failure: n=%d, N=%d, num_gens=%d, best_fitness=%f\n, opt=%f",n,N,t,(double)best_f,nk_instance->optimum);
+	    printf("failure: n=%d, n=%d, num_gens=%d, best_fitness=%f\n, opt=%f",n,n,t,(double)best_f,nk_instance->optimum);
 	    if(testing)
-	      fprintf(output, "0 %d %d %d %d\n",n,N,t,num_evals);
+	      fprintf(output, "0 %d %d %d %d\n",n,n,t,num_evals);
 	    return 0;
     } else {
-	    printf("Final result: n=%d, N=%d, num_gens=%d, best_fitness=%f\n",n,N,t,(double)best_f);
+	    printf("final result: n=%d, n=%d, num_gens=%d, best_fitness=%f\n",n,n,t,(double)best_f);
 	    if(testing)
-	      fprintf(output, "-1 %d %d %d %d\n",n,N,t,num_evals);
+	      fprintf(output, "-1 %d %d %d %d\n",n,n,t,num_evals);
 	    return 0;
     }
   }
