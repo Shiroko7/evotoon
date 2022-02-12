@@ -594,36 +594,35 @@ int main(int argc, char *argv[]) {
     // printf("Initialization took %.10f seconds\n",time_used);
 
     for ( n_try = 0 ; n_try < max_tries ; n_try++ ) {
-
-	init_try(n_try);
+        init_try(n_try);
 
         if (!at_least_1_as_active ) {
-	    for ( i = 0 ; i < n_ants ; i++ )
+        for ( i = 0 ; i < n_ants ; i++ )
                 nn_tour(&ant[i], FALSE);
-		
-	    if ( ls_flag > 0 )
+        
+        if ( ls_flag > 0 )
                 local_search();
-		
-	    update_statistics();
-	}
-	else {
-		while ( !termination_condition() ) {
-
-		    construct_solutions();
-
-		    if ( ls_flag > 0 )
-			    local_search();
-
-		    update_statistics();
-
-		    pheromone_trail_update();
-
-		    search_control_and_statistics();
-
-		    iteration++;
+        
+        update_statistics();
 	    }
-	}
-	exit_try(n_try);
+        else {
+            while ( !termination_condition() ) {
+
+                construct_solutions();
+
+                if ( ls_flag > 0 )
+                    local_search();
+
+                update_statistics();
+
+                pheromone_trail_update();
+
+                search_control_and_statistics();
+
+                iteration++;
+            }
+	    }
+	    exit_try(n_try);
     }
     exit_program();
 

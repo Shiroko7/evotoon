@@ -42,11 +42,18 @@ def make_seed(seed: int = 765):
 
 def choose_instances(path: str, n: int, seed: int):
     instance_list = []
+    tsp = False
     for file in sorted(os.listdir(path)):
-        if file != ".DS_Store":
-            instances = sorted(os.listdir(os.path.join(path, file)))
-            instances = [os.path.join(path, file, ins) for ins in instances]
-            instance_list += random.sample(instances, n)
+        if os.path.isdir(file):
+            if file != ".DS_Store":
+                instances = sorted(os.listdir(os.path.join(path, file)))
+                instances = [os.path.join(path, file, ins) for ins in instances]
+                instance_list += random.sample(instances, n)
+        elif file.endswith(".tsp"):
+            tsp = True
+            instance_list.append(path + "/" + file)
+    if tsp:
+        instance_list = random.sample(instance_list, n)
     return instance_list
 
 
@@ -152,6 +159,7 @@ def initialization(
 def execute_ACOTSP(
     instance: str,
     seed: int,
+    optimum: int,
     executable_path: str,
     alpha: float,
     beta: float,
@@ -160,8 +168,8 @@ def execute_ACOTSP(
     ants: int,
     nnants: int,
     localsearch: int,
-    optimum: int
 ):
+    # print(instance, seed, executable_path, alpha, beta, rho, q0, ants, nnants, localsearch, optimum)
     """
     function to execute ACOTSP program, it returns its output.
     """
@@ -169,7 +177,7 @@ def execute_ACOTSP(
         executable_path,
         "--tsplibfile",
         instance,
-        "--mmas",
+        "--acs",
         "--seed",
         str(seed),
         "--alpha",
@@ -285,16 +293,22 @@ def evaluate_results(result_list: List):
 
 
 def configuration_evaluation(
-    algorithm: Callable, instance_list: List, seed_list, **kwargs
+    algorithm: Callable, instance_list: List, seed_list: List, optimal_list: List, **kwargs
 ) -> float:
     """
     interface to call different algorithms to evaluate
     """
     evaluation_keys = ["instance_name", "seed", "score"]
-    result_list = [
-        [instance, seed, algorithm(instance, seed, **kwargs)]
-        for instance, seed in zip(instance_list, seed_list)
-    ]
+    if optimal_list:
+        result_list = [
+            [instance, seed, algorithm(instance, seed, optimum, **kwargs)]
+            for instance, seed, optimum in zip(instance_list, seed_list, optimal_list)
+        ]        
+    else:
+        result_list = [
+            [instance, seed, algorithm(instance, seed, **kwargs)]
+            for instance, seed in zip(instance_list, seed_list)
+        ]
 
     return pd.DataFrame(columns=evaluation_keys, data=result_list)
 
