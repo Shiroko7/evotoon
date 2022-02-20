@@ -44,11 +44,13 @@ def choose_instances(path: str, n: int, seed: int):
     instance_list = []
     tsp = False
     for file in sorted(os.listdir(path)):
-        if os.path.isdir(file):
+        file_path = os.path.join(path, file)
+        if os.path.isdir(file_path):
             if file != ".DS_Store":
-                instances = sorted(os.listdir(os.path.join(path, file)))
+                instances = sorted(os.listdir(file_path))
                 instances = [os.path.join(path, file, ins) for ins in instances]
-                instance_list += random.sample(instances, n)
+                instance_list += instances #random.sample(instances, n)
+                
         elif file.endswith(".tsp"):
             tsp = True
             instance_list.append(path + "/" + file)
@@ -164,10 +166,11 @@ def execute_ACOTSP(
     alpha: float,
     beta: float,
     rho: float,
-    q0: float,
     ants: int,
-    nnants: int,
+    nnls: int,
+    elitistants: int,
     localsearch: int,
+    dlb: int,
 ):
     # print(instance, seed, executable_path, alpha, beta, rho, q0, ants, nnants, localsearch, optimum)
     """
@@ -177,21 +180,25 @@ def execute_ACOTSP(
         executable_path,
         "--tsplibfile",
         instance,
-        "--acs",
+        "--eas",
         "--seed",
         str(seed),
+        "--tours",
+        "1000",
         "--alpha",
         str(alpha),
         "--beta",
         str(beta),
         "--rho",
         str(rho),
-        "--q0",
-        str(q0),
+        "--nnls",
+        str(nnls),
         "--ants",
         str(ants),
-        "--nnants",
-        str(nnants),
+        "--elitistants",
+        str(elitistants),
+        "--dlb",
+        str(dlb),
         "--optimum",
         str(optimum)
     ]
@@ -258,7 +265,6 @@ def execute_CodGA(
     p_m: float,
     N: int,
     t_max: int,
-    c_0: int,
     output: str,
 ) -> float:
     """
@@ -273,7 +279,7 @@ def execute_CodGA(
         str(N),
         str(t_max),
         str(seed),
-        str(c_0),
+        "1"
     ]
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     try:
@@ -292,22 +298,39 @@ def evaluate_results(result_list: List):
     return sum(result_list) / len(result_list)
 
 
+def pop_n_elem(any_list, n_list):
+    new_list = []
+    for n in n_list:
+        x = any_list[n]#.pop(n)
+        new_list.append(x)
+    return new_list
+
+
 def configuration_evaluation(
-    algorithm: Callable, instance_list: List, seed_list: List, optimal_list: List, **kwargs
+    algorithm: Callable, instance_list: List, seed_list: List, optimal_list: List = None, **kwargs
 ) -> float:
     """
     interface to call different algorithms to evaluate
     """
     evaluation_keys = ["instance_name", "seed", "score"]
-    if optimal_list:
+    if optimal_list is not None:
+        random_ins = sorted(random.sample(range(len(instance_list)), 5), reverse=True)
+        pop_instances = pop_n_elem(instance_list, random_ins)
+        pop_seeds = pop_n_elem(seed_list, random_ins)
+        pop_optimums = pop_n_elem(optimal_list, random_ins)
+
         result_list = [
             [instance, seed, algorithm(instance, seed, optimum, **kwargs)]
-            for instance, seed, optimum in zip(instance_list, seed_list, optimal_list)
-        ]        
+            for instance, seed, optimum in zip(pop_instances, seed_list, pop_optimums)
+        ]
     else:
+        random_ins = sorted(random.sample(range(len(instance_list)), 5), reverse=True)
+        pop_instances = pop_n_elem(instance_list, random_ins)
+        pop_seeds = pop_n_elem(seed_list, random_ins)
+
         result_list = [
             [instance, seed, algorithm(instance, seed, **kwargs)]
-            for instance, seed in zip(instance_list, seed_list)
+            for instance, seed in zip(pop_instances, seed_list)
         ]
 
     return pd.DataFrame(columns=evaluation_keys, data=result_list)
@@ -323,7 +346,6 @@ def evaluate_batch(
     batch = batch.drop(columns=["Step_Found"], inplace=False)
     for idx, conf in batch.iterrows():
         batch_evaluations[idx] = configuration_evaluation(algorithm, **{**dict(conf), **kwargs})
-
     return batch_evaluations
 
 
@@ -431,10 +453,10 @@ def select_configurations_by_ranking(
     friedman_test=True,
 ):
     total_evaluations = {**batch_evaluations, **generated_evaluations}
-
+    print("------------------------------------------------------------------------------------------------")
     cols = ["instance_name"] + [f"conf_{idx}" for idx in total_evaluations]
-
     df = pd.DataFrame(columns=cols)
+
     for instance_name in instance_list:
         evaluation_dict = {
             f"conf_{idx}": total_evaluations[idx]
@@ -444,11 +466,16 @@ def select_configurations_by_ranking(
         }
         new_row = {**{"instance_name": instance_name}, **evaluation_dict}
         df = df.append(new_row, ignore_index=True)
+
+    for col in cols[1:]:
+        df[col] = df[col].astype('float64')
+
     df = df.rank(axis=1, numeric_only=True)
 
     if friedman_test:
         # compare samples
         args = tuple(df[conf] for conf in df)
+        
         stat, p = friedmanchisquare(*args)
 
         # interpret
@@ -509,9 +536,9 @@ def evo_tunning(
     initial_batch,
     execute_algorithm,
     returning_type="RAW_VALUE",
-    float_params=None,
-    int_params=None,
-    cat_params=None,
+    float_params=[],
+    int_params=[],
+    cat_params=[],
     **function_kwargs,
 ):
     # EVALUATE BATCH
@@ -524,7 +551,7 @@ def evo_tunning(
         batch, batch_evaluations, execute_algorithm, **function_kwargs
     )
 
-    cur_budget = budget - len(batch) * len(function_kwargs["seed_list"])
+    cur_budget = budget - len(batch) * 5
 
     X = batch.drop(columns=["Step_Found"], inplace=False).values
     y = np.array([batch_evaluations[i]["score"].mean() for i in batch_evaluations])
@@ -553,7 +580,7 @@ def evo_tunning(
             generated_X, generated_evaluations, execute_algorithm, **function_kwargs
         )
 
-        cur_budget = cur_budget - len(generated_X) * len(function_kwargs["seed_list"])
+        cur_budget = cur_budget - len(generated_X) * 5
 
         generated_y = np.array(
             [generated_evaluations[i]["score"].mean() for i in generated_evaluations]
@@ -600,7 +627,7 @@ def evo_tunning(
                 fillers, fillers_evaluations, execute_algorithm, **function_kwargs
             )
 
-            cur_budget = cur_budget - len(fillers) * len(function_kwargs["seed_list"])
+            cur_budget = cur_budget - len(fillers) * 5
 
             batch = pd.concat([batch, fillers]).reset_index(drop=True)
             batch_evaluations = {**batch_evaluations, **fillers_evaluations}

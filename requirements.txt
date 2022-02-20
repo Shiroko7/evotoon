@@ -1,0 +1,16 @@
+keras==2.8.0
+Keras-Preprocessing==1.1.2
+matplotlib==3.5.1
+numpy==1.22.2
+pandas==1.4.1
+scikit-posthocs==0.6.7
+scipy==1.8.0
+seaborn==0.11.2
+statsmodels==0.13.2
+tensorboard==2.8.0
+tensorboard-data-server==0.6.1
+tensorboard-plugin-wit==1.8.1
+tensorflow==2.8.0
+tensorflow-io-gcs-filesystem==0.24.0
+termcolor==1.1.0
+tf-estimator-nightly==2.8.0.dev2021122109
