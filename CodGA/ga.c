@@ -319,7 +319,7 @@ int ga(int N,
   freePopulation(s,N);
   freePopulation(o,N);
 
-
+/*
   float opt_diff;
   if (t_max == 0) {
     opt_diff = 100;
@@ -329,6 +329,8 @@ int ga(int N,
     opt_diff = 100 * (1 - div);
   }
   printf("%f\n", opt_diff);
+  */
+  printf("%d\n", t);
   return 0;
   /*
   file *output;
