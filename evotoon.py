@@ -183,10 +183,12 @@ def execute_ACOTSP(
         "--eas",
         "--seed",
         str(seed),
-        "--tours",
-        "50",
+        "--tries",
+        "1",
         "--time",
         "5",
+        "--tours",
+        "50",
         "--alpha",
         str(alpha),
         "--beta",
@@ -267,6 +269,7 @@ def execute_CodGA(
     p_m: float,
     N: int,
     t_max: int,
+    c_0: int,
     output: str,
 ) -> float:
     """
@@ -281,7 +284,7 @@ def execute_CodGA(
         str(N),
         str(t_max),
         str(seed),
-        "1"
+        str(c_0)
     ]
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     try:
@@ -351,10 +354,13 @@ def evaluate_batch(
     return batch_evaluations
 
 
-def create_model(X_array: list):
+def create_model(X_array: list, layers: int=2, neurons: list=[8,4]):
     """
     This function creates the model to be used for tunning
     """
+    if layers != len(neurons):
+        raise ValueError("Layers differ to neurons structure lenght")
+
     # Create model
     normalizer = preprocessing.Normalization(
         axis=-1,
@@ -366,9 +372,12 @@ def create_model(X_array: list):
 
     model = Sequential()
     model.add(normalizer)
-    model.add(Dense(8, activation="relu", input_shape=X_array.shape))
-    model.add(Dense(4, activation="relu"))
+
+    model.add(Dense(neurons[0], activation="relu", input_shape=X_array.shape))
+    for layer in range(1, layers):
+        model.add(Dense(neurons[layer], activation="relu"))
     model.add(Dense(units=1))
+
     # Compile model
     model.compile(loss="mean_squared_error", optimizer="adam")
     return model
@@ -537,6 +546,7 @@ def evo_tunning(
     poblation_size,
     initial_batch,
     execute_algorithm,
+    model_kwargs,
     returning_type="RAW_VALUE",
     float_params=[],
     int_params=[],
@@ -559,8 +569,8 @@ def evo_tunning(
     y = np.array([batch_evaluations[i]["score"].mean() for i in batch_evaluations])
 
     # Create model (this should consider the instance label)
-    model = create_model(X)
-    history = model.fit(X, y, epochs=50, verbose=0, validation_split=0.2)
+    model = create_model(X, **model_kwargs)
+    history = model.fit(X, y, batch_size=8, epochs=25, verbose=0, validation_split=0.2)
 
     # Set queue to update
     reserve_X = pd.DataFrame()
