@@ -1,0 +1,3 @@
+"CPU Time Used","Estimated Training Performance","Wallclock Time","Incumbent ID","Automatic Configurator (CPU) Time","Configuration..."
+0.000000, 2147483648.000000, 0.001990, 1, 0.001990, N='21',c_0='1',p_c='0.3510616264195509',p_m='0.43468874695304377'
+0.010205, 0.000000, 0.024129, 1, 0.013924, N='21',c_0='1',p_c='0.3510616264195509',p_m='0.43468874695304377'

@@ -48,7 +48,7 @@ int main(int argc, char **argv)
   int c_o;
   NK_instance nk_instance;
 
-  setSeed(atoi(argv[7])); /*123*/
+  setSeed(atoi(argv[8])); /*123*/
 
   /* -------------------------------------- */
 
@@ -86,9 +86,9 @@ int main(int argc, char **argv)
   N = atoi(argv[5]);
   if(N%2 != 0)
       N=N+1;
-  t_max = atoi(argv[6]);/*(int)(atof(argv[6])/N);*/
+  t_max = atoi(argv[7]);/*(int)(atof(argv[6])/N);*/
 
-  c_o = atoi(argv[8]);
+  c_o = atoi(argv[6]);
   if(c_o < 1 || c_o > 2)
     printf("ERROR en seleccion operador de cruzamiento\n");
   /*printf("c_o: %d\n", c_o);*/

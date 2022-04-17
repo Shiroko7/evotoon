@@ -1,0 +1,11 @@
+alpha real [1.0, 10.0] [5.5]
+ants integer [5, 100] [52]
+beta real [1.0, 10.0] [5.5]
+elitistants integer [1, 750] [376]
+localsearch categorical {0, 1, 2, 3} [0]
+rho real [0.0, 1.0] [0.5]
+dlb categorical {0, 1} [0]
+nnls integer [5, 50] [28]
+
+dlb | localsearch != 0
+nnls | localsearch != 0

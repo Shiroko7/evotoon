@@ -1,0 +1,2 @@
+{"cpu_time": 0.0, "wallclock_time": 0.001873016357421875, "evaluations": 0, "cost": 2147483648.0, "incumbent": ["N='21'", "c_0='1'", "p_c='0.3510616264195509'", "p_m='0.43468874695304377'"], "origin": "Random initial design."}
+{"cpu_time": 0.011059999465942383, "wallclock_time": 0.023353099822998047, "evaluations": 1, "cost": 0.0, "incumbent": ["N='21'", "c_0='1'", "p_c='0.3510616264195509'", "p_m='0.43468874695304377'"], "origin": "Random initial design."}

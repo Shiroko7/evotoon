@@ -282,9 +282,9 @@ def execute_CodGA(
         str(p_c),
         str(p_m),
         str(N),
+        str(c_0),
         str(t_max),
         str(seed),
-        str(c_0)
     ]
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     try:
