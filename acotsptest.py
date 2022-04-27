@@ -173,123 +173,178 @@ def run_acotsp(save_folder, seed, alpha, beta, rho, ants, nnls, elitistants, loc
 
 
 if __name__ =="__main__":
-	# IRACE
-	alpha = 3.009
-	beta =  8.057
-	rho =  0.421
-	ants = 73
-	nnls = 46
-	elitistants = 595
+	# EVOTOON
+	alpha = 3.552
+	beta = 8.274
+	rho =  0.320
+	ants = 53
+	nnls = 22
+	elitistants = 221
 	localsearch = 3
-	dlb = 1
-	for i in range(SEED, SEED + 5):
-		run_acotsp("./acotsptesting/irace/1", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
-
-
-	alpha = 1.264
-	beta =  3.501
-	rho =  0.357
-	ants = 52
-	nnls = 24
-	elitistants = 126
-	localsearch = 3
-	dlb = 1
-	for i in range(SEED, SEED + 5):
-		run_acotsp("./acotsptesting/irace/2", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
-
-
-	alpha = 1.752
-	beta =  4.479
-	rho =  0.534
-	ants = 63
-	nnls = 32
-	elitistants = 420
-	localsearch = 3
-	dlb = 1
-	for i in range(SEED, SEED + 5):
-		run_acotsp("./acotsptesting/irace/3", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
-
-
-	alpha = 6.118
-	beta =  7.286
-	rho =  0.316
-	ants = 97
-	nnls = 31
-	elitistants = 47
-	localsearch = 3
-	dlb = 1
-	for i in range(SEED, SEED + 5):
-		run_acotsp("./acotsptesting/irace/4", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
-
-
-	alpha = 2.313
-	beta =  8.183
-	rho =  0.590
-	ants = 22
-	nnls = 27
-	elitistants = 247
-	localsearch = 3
-	dlb = 1
-	for i in range(SEED, SEED + 5):
-		run_acotsp("./acotsptesting/irace/5", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
-
-
-	# SMAC
-	alpha = 4.6909356296798235
-	beta = 9.660321509942506
-	rho =  0.9307106389687687
-	ants = 50
-	nnls = 35
-	elitistants = 620
-	localsearch = 1
-	dlb = 1
-	for i in range(SEED, SEED + 5):
-		run_acotsp("./acotsptesting/smac/1", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
-
-
-	alpha = 7.549531688595925
-	beta =  3.1926625398301542
-	rho =  0.40282573270687994
-	ants = 85
-	nnls = 15
-	elitistants = 658
-	localsearch = 1
 	dlb = 0
 	for i in range(SEED, SEED + 5):
-		run_acotsp("./acotsptesting/smac/2", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+		run_acotsp("./acotsptesting/evotoon/1", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
 
+	alpha = 5.587
+	beta = 6.546
+	rho =  0.118
+	ants = 90
+	nnls = 45
+	elitistants = 714
+	localsearch = 3
+	dlb = 0
+	for i in range(SEED, SEED + 5):
+		run_acotsp("./acotsptesting/evotoon/2", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
 
-	alpha = 1.025570050576051
-	beta =  1.9484924435528148
-	rho =  0.3294451313822462
-	ants = 30
-	nnls = 33
-	elitistants = 379
+	alpha = 1.976
+	beta = 5.072
+	rho =  0.335
+	ants = 43
+	nnls = 20
+	elitistants = 172
+	localsearch = 3
+	dlb = 0
+	for i in range(SEED, SEED + 5):
+		run_acotsp("./acotsptesting/evotoon/3", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+
+	alpha = 1.323
+	beta = 6.458
+	rho =  0.338
+	ants = 12
+	nnls = 28
+	elitistants = 238
+	localsearch = 3
+	dlb = 0
+	for i in range(SEED, SEED + 5):
+		run_acotsp("./acotsptesting/evotoon/4", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+
+	alpha = 1.949
+	beta = 9.995
+	rho =  0.219
+	ants = 59
+	nnls = 47
+	elitistants = 669
 	localsearch = 3
 	dlb = 1
 	for i in range(SEED, SEED + 5):
-		run_acotsp("./acotsptesting/smac/3", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+		run_acotsp("./acotsptesting/evotoon/5", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+	# # IRACE
+	# alpha = 3.009
+	# beta =  8.057
+	# rho =  0.421
+	# ants = 73
+	# nnls = 46
+	# elitistants = 595
+	# localsearch = 3
+	# dlb = 1
+	# for i in range(SEED, SEED + 5):
+	# 	run_acotsp("./acotsptesting/irace/1", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
 
 
-	alpha = 9.680665588480524
-	beta =  7.459178911650364
-	rho =  0.8682624044554927
-	ants = 77
-	nnls = 43
-	elitistants = 371
-	localsearch = 1
-	dlb = 0
-	for i in range(SEED, SEED + 5):
-		run_acotsp("./acotsptesting/smac/4", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+	# alpha = 1.264
+	# beta =  3.501
+	# rho =  0.357
+	# ants = 52
+	# nnls = 24
+	# elitistants = 126
+	# localsearch = 3
+	# dlb = 1
+	# for i in range(SEED, SEED + 5):
+	# 	run_acotsp("./acotsptesting/irace/2", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
 
 
-	alpha = 8.373444239506172
-	beta =  4.795027157524783
-	rho =  0.3777989171145002
-	ants = 19
-	nnls = 25
-	elitistants = 538
-	localsearch = 2
-	dlb = 0
-	for i in range(SEED, SEED + 5):
-		run_acotsp("./acotsptesting/smac/5", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+	# alpha = 1.752
+	# beta =  4.479
+	# rho =  0.534
+	# ants = 63
+	# nnls = 32
+	# elitistants = 420
+	# localsearch = 3
+	# dlb = 1
+	# for i in range(SEED, SEED + 5):
+	# 	run_acotsp("./acotsptesting/irace/3", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+
+
+	# alpha = 6.118
+	# beta =  7.286
+	# rho =  0.316
+	# ants = 97
+	# nnls = 31
+	# elitistants = 47
+	# localsearch = 3
+	# dlb = 1
+	# for i in range(SEED, SEED + 5):
+	# 	run_acotsp("./acotsptesting/irace/4", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+
+
+	# alpha = 2.313
+	# beta =  8.183
+	# rho =  0.590
+	# ants = 22
+	# nnls = 27
+	# elitistants = 247
+	# localsearch = 3
+	# dlb = 1
+	# for i in range(SEED, SEED + 5):
+	# 	run_acotsp("./acotsptesting/irace/5", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+
+
+	# # SMAC
+	# alpha = 4.6909356296798235
+	# beta = 9.660321509942506
+	# rho =  0.9307106389687687
+	# ants = 50
+	# nnls = 35
+	# elitistants = 620
+	# localsearch = 1
+	# dlb = 1
+	# for i in range(SEED, SEED + 5):
+	# 	run_acotsp("./acotsptesting/smac/1", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+
+
+	# alpha = 7.549531688595925
+	# beta =  3.1926625398301542
+	# rho =  0.40282573270687994
+	# ants = 85
+	# nnls = 15
+	# elitistants = 658
+	# localsearch = 1
+	# dlb = 0
+	# for i in range(SEED, SEED + 5):
+	# 	run_acotsp("./acotsptesting/smac/2", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+
+
+	# alpha = 1.025570050576051
+	# beta =  1.9484924435528148
+	# rho =  0.3294451313822462
+	# ants = 30
+	# nnls = 33
+	# elitistants = 379
+	# localsearch = 3
+	# dlb = 1
+	# for i in range(SEED, SEED + 5):
+	# 	run_acotsp("./acotsptesting/smac/3", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+
+
+	# alpha = 9.680665588480524
+	# beta =  7.459178911650364
+	# rho =  0.8682624044554927
+	# ants = 77
+	# nnls = 43
+	# elitistants = 371
+	# localsearch = 1
+	# dlb = 0
+	# for i in range(SEED, SEED + 5):
+	# 	run_acotsp("./acotsptesting/smac/4", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)
+
+
+	# alpha = 8.373444239506172
+	# beta =  4.795027157524783
+	# rho =  0.3777989171145002
+	# ants = 19
+	# nnls = 25
+	# elitistants = 538
+	# localsearch = 2
+	# dlb = 0
+	# for i in range(SEED, SEED + 5):
+	# 	run_acotsp("./acotsptesting/smac/5", i, alpha, beta, rho, ants, nnls, elitistants, localsearch, dlb)

@@ -201,6 +201,8 @@ def execute_ACOTSP(
         str(ants),
         "--elitistants",
         str(elitistants),
+        "--localsearch",
+        str(localsearch),
         "--dlb",
         str(dlb),
         "--optimum",

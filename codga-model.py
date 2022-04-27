@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
 	t_max = 100000
 	for i, row in df.iterrows():
-		if i == 25:
+		if i > 52:
 			p_c = row["p_c"]
 			p_m = row["p_m"]
 			N = row["N"]
