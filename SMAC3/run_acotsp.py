@@ -306,6 +306,8 @@ if __name__ == "__main__":
     # Start optimization
     try:
         incumbent = smac.optimize()
+    except Exception as e:
+        print(e)
     finally:
         incumbent = smac.solver.incumbent
 
@@ -315,3 +317,7 @@ if __name__ == "__main__":
         inc_costs.append(cost)
     print(incumbent)
     print("Optimized Value: %.4f" % (np.mean(inc_costs)))
+
+
+
+#python3 run_acotsp.py 961  20313.98s user 357.13s system 99% cpu 5:47:13.94 total

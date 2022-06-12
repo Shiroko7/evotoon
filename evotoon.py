@@ -111,7 +111,7 @@ def latin_hypercube_sampling_cat(options: List[str], size: int) -> List:
 
 
 def initialization(
-    poblation_size: int,
+    population_size: int,
     float_parameters_list: List[FloatParam] = [],
     int_parameters_list: List[IntParam] = [],
     cat_parameters_list: List[CatParam] = [],
@@ -126,7 +126,7 @@ def initialization(
         points = latin_hypercube_sampling_num(
             min_val=param.min_val,
             max_val=param.max_val,
-            size=poblation_size,
+            size=population_size,
             dtype=np.float64,
             decs=param.decs,
         )
@@ -137,25 +137,25 @@ def initialization(
         points = latin_hypercube_sampling_num(
             min_val=param.min_val,
             max_val=param.max_val,
-            size=poblation_size,
+            size=population_size,
             dtype=np.int32,
         )
 
         parameter_list.append((param.name, points))
 
     for param in cat_parameters_list:
-        points = latin_hypercube_sampling_cat(param.values, poblation_size)
+        points = latin_hypercube_sampling_cat(param.values, population_size)
         parameter_list.append((param.name, points))
 
     # reshape
-    initial_poblation = list()
-    for i in range(poblation_size):
+    initial_population = list()
+    for i in range(population_size):
         conf = dict()
         for name, points in parameter_list:
             conf[name] = points[i]
-        initial_poblation.append(conf)
+        initial_population.append(conf)
 
-    return initial_poblation
+    return initial_population
 
 
 def execute_ACOTSP(
@@ -389,14 +389,14 @@ def create_model(X_array: list, layers: int=2, neurons: list=[8,4]):
 #     """
 #     Generates new configurations by selecting random configurations
 #     """
-#     poblation_size = kwargs["poblation_size"]
+#     population_size = kwargs["population_size"]
 #     generated_X = pd.DataFrame(initialization(**kwargs))
 
 #     A = model.predict(generated_X.values)
 #     #A = np.squeeze(model.predict(generated_X))
 #     #top_80 = np.percentile(A, 80)
 #     #generated_X = generated_X[np.squeeze(np.argwhere(A > top_80))]
-#     partition_A = np.argpartition(A[:, -1], -poblation_size//2)[-poblation_size//2:]
+#     partition_A = np.argpartition(A[:, -1], -population_size//2)[-population_size//2:]
 #     generated_x = generated_X.filter(items = partition_A, axis=0).reset_index(drop=True)
 #     if index_start != 0:
 #         generated_x.index = generated_x.index + index_start
@@ -462,11 +462,10 @@ def select_configurations_by_ranking(
     generated_X,
     generated_evaluations,
     instance_list,
-    poblation_size,
+    population_size,
     friedman_test=True,
 ):
     total_evaluations = {**batch_evaluations, **generated_evaluations}
-    print("------------------------------------------------------------------------------------------------")
     cols = ["instance_name"] + [f"conf_{idx}" for idx in total_evaluations]
     df = pd.DataFrame(columns=cols)
 
@@ -506,7 +505,7 @@ def select_configurations_by_ranking(
             ].tolist()
             df.drop(different_dists, axis=1, inplace=True)
 
-    best_confs = df.sum().nlargest(poblation_size)
+    best_confs = df.sum().nlargest(population_size)
     best_indexes = [int(idx.replace("conf_", "")) for idx, *_ in best_confs.iteritems()]
 
     batch = pd.concat([batch, generated_X]).filter(best_indexes, axis=0).reset_index(drop=True)
@@ -519,7 +518,7 @@ def select_configurations_by_mean(batch_evaluations, generated_evaluations):
     total_evaluations = {**batch_evaluations, **generated_evaluations}
 
     total_score = np.array([total_evaluations[i]["score"].mean() for i in total_evaluations])
-    best_indexes = np.argpartition(total_score, -poblation_size)[-poblation_size:]
+    best_indexes = np.argpartition(total_score, -population_size)[-population_size:]
 
     batch = pd.concat([batch, generated_X]).filter(best_indexes, axis=0).reset_index(drop=True)
     batch_evaluations = {j: total_evaluations[idx] for j, idx in enumerate(best_indexes)}
@@ -545,7 +544,7 @@ def naive_tunning(algorithm: Callable, configurations: List[dict], **kwargs) -> 
 def evo_tunning(
     all_params,
     budget,
-    poblation_size,
+    population_size,
     initial_batch,
     execute_algorithm,
     model_kwargs,
@@ -583,12 +582,12 @@ def evo_tunning(
     while cur_budget > 0:
         print("Budget left", cur_budget)
         # Generate new random configurations
-        generated_X = generate_configurations(model, batch, all_params, poblation_size)
+        generated_X = generate_configurations(model, batch, all_params, population_size)
         generated_X["Step_Found"] = i
         # Evaluate them
         generated_evaluations = {
             idx: pd.DataFrame(columns=evaluation_keys)
-            for idx in range(poblation_size, poblation_size + len(generated_X))
+            for idx in range(population_size, population_size + len(generated_X))
         }
         generated_evaluations = evaluate_batch(
             generated_X, generated_evaluations, execute_algorithm, **function_kwargs
@@ -623,19 +622,19 @@ def evo_tunning(
             generated_X,
             generated_evaluations,
             function_kwargs["instance_list"],
-            poblation_size,
+            population_size,
             friedman_test=True,
         )
 
         # Fill if we don't have enough solutions
-        if len(batch) < poblation_size:
+        if len(batch) < population_size:
             fillers = pd.DataFrame(
-                initialization(poblation_size - len(batch), float_params, int_params, cat_params)
+                initialization(population_size - len(batch), float_params, int_params, cat_params)
             )
             fillers["Step_Found"] = i
             fillers_evaluations = {
                 idx: pd.DataFrame(columns=evaluation_keys)
-                for idx in range(poblation_size - len(batch), poblation_size)
+                for idx in range(population_size - len(batch), population_size)
             }
             fillers_evaluations = evaluate_batch(
                 fillers, fillers_evaluations, execute_algorithm, **function_kwargs
@@ -654,3 +653,105 @@ def evo_tunning(
     batch = batch.sort_values(by=["VALUE"])
 
     return batch
+
+
+
+
+
+
+
+#PSEUDO CODES FOR ME
+# EVOTOON(max_budget, population_size, update_cycle, n_seeds, hc_p_worse, hc_max_tries)
+# # INITIALIZE INITIAL population
+# batch <- LHS(population_size)
+# batch_evaluation <- evaluate(batch)
+# # CREATE MODEL
+# model <- instanciate_model()
+# model <- fit_model(batch, batch_evaluation)
+# # MAIN LOOP
+# current_budget <- max_budget
+# it <- 0
+# stored_batch <- {}
+# stored_batch_evaluation <- {}
+# While current_budget > 0
+#     generated_batch <- generate_batch(model, batch, population_size, hc_p_worse, hc_max_tries)
+#     generated_batch_evaluation <- evaluate(generated_batch)
+
+#     if not(current_budge > max_budget/2 and it MOD update_cycle = 0): #
+#         stored_batch <- stored_batch U generated_batch
+#         stored_batch_evaluation <- stored_batch_evaluation U generated_batch_evaluation
+#     else:
+#         model <- fit_model(stored_batch, stored_batch_evaluation) 
+#         stored_batch <- {}
+#         stored_batch_evaluation <- {}
+
+#     batch <- select_configurations_by_ranking(batch, batch_evaluations, generated_batch, generated_batch_evaluation, population_size)
+
+#     current_budget <- current_budget - (n_seeds * population_size * len_instances)
+#     it <- it + 1
+
+
+
+# generate_batch(model, batch, hc_p_worse, hc_max_tries)
+
+# generated_batch <- {}
+
+# for conf in batch:
+#     new_conf <- conf.copy()
+#     best_conf <- conf.copy()
+#     prediction <- model.predict(conf)
+#     best_prediction <- model.predict(conf)
+#     look_choice <- random.uniform(0,1)
+#     for i in range(max_tries): # Hill Climbingt
+#         random_param <- random.randint(0, len_batch-1)
+#         if random_param is int:
+#             new_conf[random_param] <- random.randint(param_min, param_max)
+#         elif random_param is float:
+#             new_conf[random_param] <- random.uniform(param_min, param_max)
+#         elif random_param is categorical:
+#             new_conf[random_param] <- param_valus[random.randint(0, len_param_values-1)]
+
+#         if new_conf not in batch and new_conf not in generated_batch:
+#             new_prediction <- model.predict(new_conf)
+
+#             if look_choice > hc_p_worse:
+#                 if new_prediction >= best_prediction:
+#                     best_conf <- new_conf
+#                 if n_prediction >= prediction:
+#                     break
+#             else:
+#                 if new_prediction <= best_prediction:
+#                     best_conf <- new_conf
+#                 if new_prediction <= prediction:
+#                     break
+
+
+#     generated_batch <- generated_batch U best_conf
+        
+# return generated_batch
+
+
+# select_configurations_by_ranking(batch, batch_evaluations, generated_batch, generated_evaluations, population_size, p_value)
+
+# total_evaluations <- batch_evaluations U generated_evaluations
+
+# rank_evaluations <- {}
+# for instance in instance_list:
+#     rank_evaluations <- rank_evaluations U get_mean_score(instance, total_evaluations)
+
+# rank_evaluations <- rank_evaluations.rank()
+
+# stat, p <- friedmanchisquare(rank_evaluations)
+
+# if p < p_value:
+#     posthoc_matrix <- posthoc_conover(rank_evaluations)
+#     different_dists <- filter_confs(posthoc_matrix, p_value)
+#     best_confs <- rank_evaluations \ different_dists
+
+# if len_batch_confs >= population_size:
+#     best_confs <- best_confs.nlargest(population_size)
+# else:
+#     best_confs <- rank_evaluations.nlargest(population_size)
+
+
+# return best_confs

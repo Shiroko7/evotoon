@@ -145,6 +145,8 @@ if __name__ == "__main__":
     # Start optimization
     try:
         incumbent = smac.optimize()
+    except Exception as e:
+        print(e)
     finally:
         incumbent = smac.solver.incumbent
 
@@ -153,4 +155,4 @@ if __name__ == "__main__":
     #     cost = smac.get_tae_runner().run(incumbent, i[0])[1]
     #     inc_costs.append(cost)
     print(incumbent)
-    # print("Optimized Value: %.4f" % (np.mean(inc_costs)))
+    # print("Optimized Value: %.4f" % (np.mean(inc_costs))) 2913.38s

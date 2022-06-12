@@ -382,3 +382,12 @@ Description of the best-so-far configuration:
 457  --localsearch 3 --alpha 3.51 --beta 7.161 --rho  0.819 --ants 59 --elitistants 32 --nnls 14 --dlb 1
 558  --localsearch 3 --alpha 1.552 --beta 4.456 --rho  0.118 --ants 80 --elitistants 580 --nnls 24 --dlb 1
 >
+
+
+# 2022-04-03 16:43:24 -04:
+# 2022-04-03 09:11:50 -04: Initialization
+
+
+
+
+7:31:34

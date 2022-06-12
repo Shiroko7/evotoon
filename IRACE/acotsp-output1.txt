@@ -327,3 +327,11 @@ Description of the best-so-far configuration:
 519  --localsearch 3 --alpha 6.269 --beta 9.311 --rho  0.405 --ants 76 --elitistants 164 --nnls 27 --dlb 1
 >
 >
+
+
+
+2022-04-03 27:59:11
+2022-04-02 21:26:31
+
+
+6:32:40
