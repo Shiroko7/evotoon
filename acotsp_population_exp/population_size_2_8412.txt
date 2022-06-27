@@ -1,0 +1,3 @@
+alpha	beta	rho	ants	nnls	elitistants	localsearch	dlb	Step_Found	VALUE
+3.67	1.017	0.325	99.0	30.0	603.0	3.0	1.0	95	0.5534772
+7.153	1.017	0.325	99.0	30.0	172.0	3.0	1.0	99	0.6213789999999999

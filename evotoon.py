@@ -403,15 +403,13 @@ def create_model(X_array: list, layers: int=2, neurons: list=[8,4]):
 #     return generated_x
 
 
-def generate_configurations(model, batch, all_params, index_start=0) -> list:
+def generate_configurations(model, batch, all_params, index_start=0, hc_max_tries=5, hc_p_worse=0.25, update_phase=True) -> list:
     """
     Generates new configurations by mutating two random genes with a random value.
     """
     batch = batch.drop(columns=["Step_Found"], inplace=False)
     generated_X = pd.DataFrame()
 
-    max_tries = 5
-    p_worse = 0.25
     for _, conf in batch.iterrows():
         # Select random parameter
         n_conf = conf.copy()
@@ -419,7 +417,7 @@ def generate_configurations(model, batch, all_params, index_start=0) -> list:
 
         # Explore its neighbour by randomly changing it
         look_choice = random.uniform(0, 1)
-        for _ in range(max_tries):
+        for _ in range(hc_max_tries):
             random_choice = random.randint(0, len(batch.columns) - 1)
             param = all_params[batch.columns[random_choice]]
             if isinstance(param, IntParam):
@@ -441,12 +439,12 @@ def generate_configurations(model, batch, all_params, index_start=0) -> list:
                 n_prediction = model.predict(np.array([n_conf.values]))[0][0]
 
                 # Until we find a first expected (predicted) improvement
-                if look_choice > p_worse:
-                    if n_prediction >= prediction:
-                        break
-                # Controled by chance of prefering worse solutions for diversification
-                else:
+                if update_phase and look_choice < hc_p_worse: # chance of prefering worse solutions for diversification
                     if n_prediction <= prediction:
+                        break
+                # inmprovement
+                else:
+                    if n_prediction >= prediction:
                         break
 
         generated_X = generated_X.append(n_conf, ignore_index=True)
@@ -507,7 +505,8 @@ def select_configurations_by_ranking(
 
     best_confs = df.sum().nlargest(population_size)
     best_indexes = [int(idx.replace("conf_", "")) for idx, *_ in best_confs.iteritems()]
-
+    # print(batch, generated_X)
+    # print(best_confs, best_indexes)
     batch = pd.concat([batch, generated_X]).filter(best_indexes, axis=0).reset_index(drop=True)
     batch_evaluations = {j: total_evaluations[idx] for j, idx in enumerate(best_indexes)}
 
@@ -545,6 +544,9 @@ def evo_tunning(
     all_params,
     budget,
     population_size,
+    update_cycle,
+    hc_max_tries,
+    hc_p_worse,
     initial_batch,
     execute_algorithm,
     model_kwargs,
@@ -581,8 +583,9 @@ def evo_tunning(
     print("Total Budget:", cur_budget)
     while cur_budget > 0:
         print("Budget left", cur_budget)
+        update_phase = cur_budget > budget / 2
         # Generate new random configurations
-        generated_X = generate_configurations(model, batch, all_params, population_size)
+        generated_X = generate_configurations(model, batch, all_params, population_size, hc_max_tries, hc_p_worse, update_phase)
         generated_X["Step_Found"] = i
         # Evaluate them
         generated_evaluations = {
@@ -599,9 +602,8 @@ def evo_tunning(
             [generated_evaluations[i]["score"].mean() for i in generated_evaluations]
         )
 
-        # Update model
-        # update = i % update_cycle == 0
-        if cur_budget > budget / 2:
+        # Update mode
+        if  update_phase and i % update_cycle == 0:
             history = model.fit(
                 generated_X.drop(columns=["Step_Found"], inplace=False),
                 generated_y,
