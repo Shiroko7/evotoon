@@ -314,14 +314,14 @@ def pop_n_elem(any_list, n_list):
 
 
 def configuration_evaluation(
-    algorithm: Callable, instance_list: List, seed_list: List, optimal_list: List = None, **kwargs
+    algorithm: Callable, n_seeds: int, instance_list: List, seed_list: List, optimal_list: List = None, **kwargs
 ) -> float:
     """
     interface to call different algorithms to evaluate
     """
     evaluation_keys = ["instance_name", "seed", "score"]
     if optimal_list is not None:
-        random_ins = sorted(random.sample(range(len(instance_list)), 5), reverse=True)
+        random_ins = sorted(random.sample(range(len(instance_list)), n_seeds), reverse=True)
         pop_instances = pop_n_elem(instance_list, random_ins)
         pop_seeds = pop_n_elem(seed_list, random_ins)
         pop_optimums = pop_n_elem(optimal_list, random_ins)
@@ -331,7 +331,7 @@ def configuration_evaluation(
             for instance, seed, optimum in zip(pop_instances, seed_list, pop_optimums)
         ]
     else:
-        random_ins = sorted(random.sample(range(len(instance_list)), 5), reverse=True)
+        random_ins = sorted(random.sample(range(len(instance_list)), n_seeds), reverse=True)
         pop_instances = pop_n_elem(instance_list, random_ins)
         pop_seeds = pop_n_elem(seed_list, random_ins)
 
@@ -344,7 +344,7 @@ def configuration_evaluation(
 
 
 def evaluate_batch(
-    batch: pd.DataFrame, batch_evaluations: Dict[int, pd.DataFrame], algorithm: Callable, **kwargs
+    batch: pd.DataFrame, batch_evaluations: Dict[int, pd.DataFrame], algorithm: Callable, n_seeds: int, **kwargs
 ) -> Dict[int, pd.DataFrame]:
     """
     given a batch of configurations and the algorithm to evaluate them
@@ -352,7 +352,7 @@ def evaluate_batch(
     """
     batch = batch.drop(columns=["Step_Found"], inplace=False)
     for idx, conf in batch.iterrows():
-        batch_evaluations[idx] = configuration_evaluation(algorithm, **{**dict(conf), **kwargs})
+        batch_evaluations[idx] = configuration_evaluation(algorithm, n_seeds, **{**dict(conf), **kwargs})
     return batch_evaluations
 
 
@@ -547,6 +547,7 @@ def evo_tunning(
     update_cycle,
     hc_max_tries,
     hc_p_worse,
+    n_seeds,
     initial_batch,
     execute_algorithm,
     model_kwargs,
@@ -563,10 +564,10 @@ def evo_tunning(
     evaluation_keys = ["instance_name", "seed", "score"]
     batch_evaluations = {idx: pd.DataFrame(columns=evaluation_keys) for idx, *_ in batch.iterrows()}
     batch_evaluations = evaluate_batch(
-        batch, batch_evaluations, execute_algorithm, **function_kwargs
+        batch, batch_evaluations, execute_algorithm, n_seeds, **function_kwargs
     )
 
-    cur_budget = budget - len(batch) * 5
+    cur_budget = budget - len(batch) * n_seeds
 
     X = batch.drop(columns=["Step_Found"], inplace=False).values
     y = np.array([batch_evaluations[i]["score"].mean() for i in batch_evaluations])
@@ -593,7 +594,7 @@ def evo_tunning(
             for idx in range(population_size, population_size + len(generated_X))
         }
         generated_evaluations = evaluate_batch(
-            generated_X, generated_evaluations, execute_algorithm, **function_kwargs
+            generated_X, generated_evaluations, execute_algorithm, n_seeds, **function_kwargs
         )
 
         cur_budget = cur_budget - len(generated_X) * 5
@@ -639,10 +640,10 @@ def evo_tunning(
                 for idx in range(population_size - len(batch), population_size)
             }
             fillers_evaluations = evaluate_batch(
-                fillers, fillers_evaluations, execute_algorithm, **function_kwargs
+                fillers, fillers_evaluations, execute_algorithm, n_seeds, **function_kwargs
             )
 
-            cur_budget = cur_budget - len(fillers) * 5
+            cur_budget = cur_budget - len(fillers) * n_seeds
 
             batch = pd.concat([batch, fillers]).reset_index(drop=True)
             batch_evaluations = {**batch_evaluations, **fillers_evaluations}
