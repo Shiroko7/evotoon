@@ -1,0 +1,91 @@
+{
+  "hyperparameters": [
+    {
+      "name": "alpha",
+      "type": "uniform_float",
+      "log": false,
+      "lower": 1.0,
+      "upper": 10.0,
+      "default": 5.5
+    },
+    {
+      "name": "ants",
+      "type": "uniform_int",
+      "log": false,
+      "lower": 5,
+      "upper": 100,
+      "default": 52
+    },
+    {
+      "name": "beta",
+      "type": "uniform_float",
+      "log": false,
+      "lower": 1.0,
+      "upper": 10.0,
+      "default": 5.5
+    },
+    {
+      "name": "elitistants",
+      "type": "uniform_int",
+      "log": false,
+      "lower": 1,
+      "upper": 750,
+      "default": 376
+    },
+    {
+      "name": "localsearch",
+      "type": "categorical",
+      "choices": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "default": 0,
+      "probabilities": null
+    },
+    {
+      "name": "rho",
+      "type": "uniform_float",
+      "log": false,
+      "lower": 0.0,
+      "upper": 1.0,
+      "default": 0.5
+    },
+    {
+      "name": "dlb",
+      "type": "categorical",
+      "choices": [
+        0,
+        1
+      ],
+      "default": 0,
+      "probabilities": null
+    },
+    {
+      "name": "nnls",
+      "type": "uniform_int",
+      "log": false,
+      "lower": 5,
+      "upper": 50,
+      "default": 28
+    }
+  ],
+  "conditions": [
+    {
+      "child": "dlb",
+      "parent": "localsearch",
+      "type": "NEQ",
+      "value": 0
+    },
+    {
+      "child": "nnls",
+      "parent": "localsearch",
+      "type": "NEQ",
+      "value": 0
+    }
+  ],
+  "forbiddens": [],
+  "python_module_version": "0.4.21",
+  "json_format_version": 0.2
+}

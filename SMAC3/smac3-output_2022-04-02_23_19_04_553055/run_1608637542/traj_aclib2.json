@@ -1,0 +1,4 @@
+{"cpu_time": 0.0, "wallclock_time": 0.0013208389282226562, "evaluations": 0, "cost": 2147483648.0, "incumbent": ["N='21'", "c_0='1'", "p_c='0.3510616264195509'", "p_m='0.43468874695304377'"], "origin": "Random initial design."}
+{"cpu_time": 0.011053085327148438, "wallclock_time": 0.02315378189086914, "evaluations": 1, "cost": 0.0, "incumbent": ["N='21'", "c_0='1'", "p_c='0.3510616264195509'", "p_m='0.43468874695304377'"], "origin": "Random initial design."}
+{"cpu_time": 4.538064479827881, "wallclock_time": 7.904001951217651, "evaluations": 266, "cost": 129.84, "incumbent": ["N='25'", "c_0='1'", "p_c='0.43023143779805273'", "p_m='0.39151568800173425'"], "origin": "Random initial design."}
+{"cpu_time": 34.658246755599976, "wallclock_time": 212.54069590568542, "evaluations": 1032, "cost": 115.7333, "incumbent": ["N='49'", "c_0='1'", "p_c='0.6116511379717752'", "p_m='0.24174597998873948'"], "origin": "Local Search"}

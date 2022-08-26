@@ -1,0 +1,273 @@
+R version 4.1.3 (2022-03-10) -- "One Push-Up"
+Copyright (C) 2022 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin17.0 (64-bit)
+
+R es un software libre y viene sin GARANTIA ALGUNA.
+Usted puede redistribuirlo bajo ciertas circunstancias.
+Escriba 'license()' o 'licence()' para detalles de distribucion.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Escriba 'demo()' para demostraciones, 'help()' para el sistema on-line de ayuda,
+o 'help.start()' para abrir el sistema de ayuda HTML con su navegador.
+Escriba 'q()' para salir de R.
+
+> library("irace")
+> irace.cmdline()
+#------------------------------------------------------------------------------
+# irace: An implementation in R of (Elitist) Iterated Racing
+# Version: 3.4.1.9fcaeaf
+# Copyright (C) 2010-2020
+# Manuel Lopez-Ibanez     <manuel.lopez-ibanez@manchester.ac.uk>
+# Jeremie Dubois-Lacoste
+# Leslie Perez Caceres    <leslie.perez.caceres@ulb.ac.be>
+#
+# This is free software, and you are welcome to redistribute it under certain
+# conditions.  See the GNU General Public License for details. There is NO
+# WARRANTY; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# irace builds upon previous code from the race package:
+#     race: Racing methods for the selection of the best
+#     Copyright (C) 2003 Mauro Birattari
+#------------------------------------------------------------------------------
+# installed at: /Library/Frameworks/R.framework/Versions/4.1/Resources/library/irace
+# called with:
+Warning: A default scenario file './scenario.txt' has been found and will be read
+# 1 expression(s) specifying forbidden configurations read from '/Users/shiro/usm/evotoon/IRACE/irace-setup-codga/forbidden.txt'
+# 2022-04-09 21:01:16 -04: Initialization
+# Elitist race
+# Elitist new instances: 1
+# Elitist limit: 2
+# nbIterations: 4
+# minNbSurvival: 4
+# nbParameters: 4
+# seed: 1198848119
+# confidence level: 0.95
+# budget: 5000
+# mu: 5
+# deterministic: FALSE
+
+# 2022-04-09 21:01:16 -04: Iteration 1 of 4
+# experimentsUsedSoFar: 0
+# remainingBudget: 5000
+# currentBudget: 1250
+# nbConfigurations: 208
+# Markers:
+     x No test is performed.
+     c Configurations are discarded only due to capping.
+     - The test is performed and some configurations are discarded.
+     = The test is performed but no configuration is discarded.
+     ! The test is performed and configurations could be discarded but elite configurations are preserved.
+     . All alive configurations are elite and nothing is discarded
+
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+| |   Instance|      Alive|       Best|      Mean best| Exp so far|  W time|  rho|KenW|  Qvar|
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+|x|          1|        208|        199|    1.000000000|        208|00:00:08|   NA|  NA|    NA|
+|x|          2|        208|         69|    19.50000000|        416|00:00:16|+0.05|0.52|0.7676|
+|x|          3|        208|        170|    15.33333333|        624|00:00:08|+0.13|0.42|0.6147|
+|x|          4|        208|        170|    18.75000000|        832|00:00:15|+0.13|0.35|0.6350|
+|-|          5|         58|        170|    16.40000000|       1040|00:00:08|-0.11|0.11|1.1285|
+|=|          6|         58|        170|    19.66666667|       1098|00:00:02|-0.08|0.10|1.0802|
+|=|          7|         58|         69|    65.00000000|       1156|00:00:05|-0.06|0.10|1.0579|
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+Best-so-far configuration:          69    mean value:     65.00000000
+Description of the best-so-far configuration:
+   .ID.   p_c   p_m  N c_0 .PARENT.
+69   69 0.619 0.168 27   1       NA
+
+# 2022-04-09 21:02:21 -04: Elite configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+      p_c   p_m  N c_0
+69  0.619 0.168 27   1
+170 0.964 0.526 29   1
+157 0.369 0.775 39   1
+1   0.067 0.756 49   2
+# 2022-04-09 21:02:21 -04: Iteration 2 of 4
+# experimentsUsedSoFar: 1156
+# remainingBudget: 3844
+# currentBudget: 1281
+# nbConfigurations: 163
+# Markers:
+     x No test is performed.
+     c Configurations are discarded only due to capping.
+     - The test is performed and some configurations are discarded.
+     = The test is performed but no configuration is discarded.
+     ! The test is performed and configurations could be discarded but elite configurations are preserved.
+     . All alive configurations are elite and nothing is discarded
+
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+| |   Instance|      Alive|       Best|      Mean best| Exp so far|  W time|  rho|KenW|  Qvar|
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+|x|          8|        163|        288|    3.000000000|        163|00:00:19|   NA|  NA|    NA|
+|x|          4|        163|        327|    30.50000000|        322|00:00:22|+0.14|0.57|0.8660|
+|x|          6|        163|        327|    37.33333333|        481|00:00:19|+0.04|0.36|0.8223|
+|x|          2|        163|        242|    81.25000000|        640|00:00:28|+0.09|0.32|0.8177|
+|-|          3|        105|        242|    70.20000000|        799|00:00:10|-0.13|0.10|1.1017|
+|=|          5|        105|        170|    164.8333333|        900|00:00:07|-0.07|0.11|1.0532|
+|=|          1|        105|        170|    144.8571429|       1001|00:00:05|-0.05|0.10|1.0284|
+|=|          7|        105|        274|    66.75000000|       1102|00:00:14|-0.04|0.09|1.0258|
+|=|          9|        105|        170|    216.5555556|       1207|00:00:05|-0.04|0.07|1.0376|
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+Best-so-far configuration:         170    mean value:     216.5555556
+Description of the best-so-far configuration:
+    .ID.   p_c   p_m  N c_0 .PARENT.
+170  170 0.964 0.526 29   1       NA
+
+# 2022-04-09 21:04:35 -04: Elite configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+      p_c   p_m  N c_0
+170 0.964 0.526 29   1
+69  0.619 0.168 27   1
+274 0.389 0.768 29   1
+327 0.529 0.118 25   1
+# 2022-04-09 21:04:35 -04: Iteration 3 of 4
+# experimentsUsedSoFar: 2363
+# remainingBudget: 2637
+# currentBudget: 1318
+# nbConfigurations: 135
+# Markers:
+     x No test is performed.
+     c Configurations are discarded only due to capping.
+     - The test is performed and some configurations are discarded.
+     = The test is performed but no configuration is discarded.
+     ! The test is performed and configurations could be discarded but elite configurations are preserved.
+     . All alive configurations are elite and nothing is discarded
+
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+| |   Instance|      Alive|       Best|      Mean best| Exp so far|  W time|  rho|KenW|  Qvar|
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+|x|         10|        135|        465|    2.000000000|        135|00:00:24|   NA|  NA|    NA|
+|x|          5|        135|        369|    35.50000000|        266|00:00:16|-0.05|0.48|0.9909|
+|x|          6|        135|        370|    37.66666667|        397|00:00:18|-0.05|0.30|1.0525|
+|x|          8|        135|        370|    65.50000000|        528|00:00:32|-0.01|0.24|1.0120|
+|=|          4|        135|        370|    83.00000000|        659|00:00:19|-0.00|0.20|1.0045|
+|=|          3|        135|        370|    70.66666667|        790|00:00:11|+0.00|0.17|1.0008|
+|=|          1|        135|        498|    134.1428571|        921|00:00:17|+0.02|0.16|1.0006|
+|=|          7|        135|        498|    126.8750000|       1052|00:00:36|+0.01|0.13|1.0053|
+|=|          2|        135|        498|    117.0000000|       1183|00:00:24|+0.02|0.13|0.9880|
+|=|          9|        135|        498|    105.5000000|       1314|00:00:08|+0.01|0.11|0.9945|
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+Best-so-far configuration:         498    mean value:     105.5000000
+Description of the best-so-far configuration:
+    .ID.   p_c   p_m  N c_0 .PARENT.
+498  498 0.963 0.601 30   1      170
+
+# 2022-04-09 21:08:05 -04: Elite configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+      p_c   p_m  N c_0
+498 0.963 0.601 30   1
+448 0.567 0.072 25   1
+327 0.529 0.118 25   1
+458 0.616 0.169 26   2
+# 2022-04-09 21:08:05 -04: Iteration 4 of 4
+# experimentsUsedSoFar: 3677
+# remainingBudget: 1323
+# currentBudget: 1323
+# nbConfigurations: 123
+# Markers:
+     x No test is performed.
+     c Configurations are discarded only due to capping.
+     - The test is performed and some configurations are discarded.
+     = The test is performed but no configuration is discarded.
+     ! The test is performed and configurations could be discarded but elite configurations are preserved.
+     . All alive configurations are elite and nothing is discarded
+
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+| |   Instance|      Alive|       Best|      Mean best| Exp so far|  W time|  rho|KenW|  Qvar|
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+|x|         11|        123|        448|    2.000000000|        123|00:00:08|   NA|  NA|    NA|
+|x|          9|        123|        448|    1.500000000|        242|00:00:06|+0.40|0.70|0.7695|
+|x|          6|        123|        593|    2.333333333|        361|00:00:08|+0.09|0.40|0.9786|
+|x|         10|        123|        594|    28.50000000|        480|00:00:34|+0.11|0.33|0.9785|
+|=|          5|        123|        591|    27.80000000|        599|00:00:16|+0.05|0.24|0.9685|
+|-|          7|         64|        594|    26.50000000|        718|00:00:26|-0.08|0.10|1.0494|
+|=|          4|         64|        594|    44.57142857|        778|00:00:09|-0.07|0.08|1.0398|
+|=|          2|         64|        498|    46.12500000|        838|00:00:13|-0.06|0.08|1.0210|
+|=|          3|         64|        498|    41.22222222|        898|00:00:06|-0.04|0.08|1.0087|
+|=|          8|         64|        498|    104.4000000|        958|00:00:14|-0.03|0.07|0.9958|
+|=|          1|         64|        498|    97.00000000|       1018|00:00:06|-0.03|0.06|1.0054|
+|=|         12|         64|        510|    73.16666667|       1082|00:00:05|-0.02|0.06|1.0004|
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+Best-so-far configuration:         510    mean value:     73.16666667
+Description of the best-so-far configuration:
+    .ID.   p_c   p_m  N c_0 .PARENT.
+510  510 0.984 0.606 30   1      498
+
+# 2022-04-09 21:10:41 -04: Elite configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+      p_c   p_m  N c_0
+510 0.984 0.606 30   1
+458 0.616 0.169 26   2
+448 0.567 0.072 25   1
+498 0.963 0.601 30   1
+# 2022-04-09 21:10:41 -04: Iteration 5 of 5
+# experimentsUsedSoFar: 4759
+# remainingBudget: 241
+# currentBudget: 241
+# nbConfigurations: 22
+# Markers:
+     x No test is performed.
+     c Configurations are discarded only due to capping.
+     - The test is performed and some configurations are discarded.
+     = The test is performed but no configuration is discarded.
+     ! The test is performed and configurations could be discarded but elite configurations are preserved.
+     . All alive configurations are elite and nothing is discarded
+
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+| |   Instance|      Alive|       Best|      Mean best| Exp so far|  W time|  rho|KenW|  Qvar|
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+|x|         13|         22|        629|    5.000000000|         22|00:00:01|   NA|  NA|    NA|
+|x|          7|         22|        620|    42.00000000|         40|00:00:03|-0.24|0.38|1.1483|
+|x|          9|         22|        620|    28.33333333|         58|00:00:01|+0.03|0.35|1.0648|
+|x|          2|         22|        448|    78.25000000|         76|00:00:02|-0.08|0.19|1.0425|
+|=|         12|         22|        620|    133.0000000|         94|00:00:01|-0.05|0.16|1.0564|
+|=|          4|         22|        620|    147.8333333|        112|00:00:01|-0.09|0.09|1.0442|
+|=|          3|         22|        620|    127.0000000|        130|00:00:01|-0.04|0.11|1.0143|
+|=|          5|         22|        458|    139.1250000|        148|00:00:01|-0.05|0.09|1.0115|
+|=|          8|         22|        458|    141.0000000|        166|00:00:02|-0.05|0.07|1.0054|
+|=|          6|         22|        458|    129.0000000|        184|00:00:00|-0.02|0.08|0.9889|
+|=|          1|         22|        458|    123.3636364|        202|00:00:01|-0.01|0.08|0.9703|
+|=|         10|         22|        458|    122.5000000|        220|00:00:02|+0.01|0.10|0.9449|
+|=|         11|         22|        458|    113.9230769|        238|00:00:00|+0.01|0.09|0.9391|
++-+-----------+-----------+-----------+---------------+-----------+--------+-----+----+------+
+Best-so-far configuration:         458    mean value:     113.9230769
+Description of the best-so-far configuration:
+    .ID.   p_c   p_m  N c_0 .PARENT.
+458  458 0.616 0.169 26   2       69
+
+# 2022-04-09 21:11:03 -04: Elite configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+      p_c   p_m  N c_0
+458 0.616 0.169 26   2
+448 0.567 0.072 25   1
+510 0.984 0.606 30   1
+498 0.963 0.601 30   1
+# 2022-04-09 21:11:03 -04: Stopped because there is not enough budget left to race more than the minimum (4)
+# You may either increase the budget or set 'minNbSurvival' to a lower value
+# Iteration: 6
+# nbIterations: 6
+# experimentsUsedSoFar: 4997
+# timeUsed: 0
+# remainingBudget: 3
+# currentBudget: 3
+# number of elites: 4
+# nbConfigurations: 3
+# Best configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+      p_c   p_m  N c_0
+458 0.616 0.169 26   2
+448 0.567 0.072 25   1
+510 0.984 0.606 30   1
+498 0.963 0.601 30   1
+# Best configurations as commandlines (first number is the configuration ID; same order as above):
+458  0.616 0.169 26 2
+448  0.567 0.072 25 1
+510  0.984 0.606 30 1
+498  0.963 0.601 30 1
+>
+
+
+# 2022-04-09 21:11:03 -04: 
+# 2022-04-09 21:01:16 -04: Initialization
+
+
+00:09:47

@@ -1,0 +1,15 @@
+../InstanciasNKLandscapes/Instances-Training/nk_2_20/nk_20_2.1
+../InstanciasNKLandscapes/Instances-Training/nk_2_38/nk_38_2.1
+../InstanciasNKLandscapes/Instances-Training/nk_2_52/nk_52_2.1
+../InstanciasNKLandscapes/Instances-Training/nk_3_20/nk_20_3.1
+../InstanciasNKLandscapes/Instances-Training/nk_3_34/nk_34_3.1
+../InstanciasNKLandscapes/Instances-Training/nk_3_48/nk_48_3.1
+../InstanciasNKLandscapes/Instances-Training/nk_4_20/nk_20_4.1
+../InstanciasNKLandscapes/Instances-Training/nk_4_30/nk_30_4.1
+../InstanciasNKLandscapes/Instances-Training/nk_4_40/nk_40_4.1
+../InstanciasNKLandscapes/Instances-Training/nk_5_20/nk_20_5.1
+../InstanciasNKLandscapes/Instances-Training/nk_5_28/nk_28_5.1
+../InstanciasNKLandscapes/Instances-Training/nk_5_38/nk_38_5.1
+../InstanciasNKLandscapes/Instances-Training/nk_6_20/nk_20_6.1
+../InstanciasNKLandscapes/Instances-Training/nk_6_26/nk_26_6.1
+../InstanciasNKLandscapes/Instances-Training/nk_6_32/nk_32_6.1

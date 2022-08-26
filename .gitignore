@@ -1,0 +1,8 @@
+*.pyc
+*.o
+__pycache__
+.vscode/
+.env
+.bash_history
+.cache/
+.ipython/

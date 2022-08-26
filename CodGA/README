@@ -1,0 +1,31 @@
+This source code enables the user to apply the simple genetic 
+algorithm to instances of the NK landscape model. The main purpose
+of this code is to show how to use the functions for evaluating
+candidate solutions on the NK instances generated with the provided
+generator and for testing their optimality, discussed in
+
+Pelikan, M., (2008). Analysis of Estimation of Distribution Algorithms 
+and Genetic Algorithms on NK Landscapes. MEDAL Report No. 2008001.
+
+To compile the code, run "make" in this directory. The result will
+be an executable file "ga-nk" in the same directory.
+
+The executable file take a file name of the instance to apply the
+genetic algorithm to, which is provided as a command-line argument.
+If the global optimum of the provided instance is known (should be
+written in the instance file), the algorithm terminates when the 
+optimum is found. Otherwise, the code stops when the maximum number
+of generations is reached (initialized automatically to n). 
+
+Example usage:
+- To solve instance from file "nk_40_2.1", run
+./ga-nk nk_40_2.1
+
+The code is simple and quite well commented, but if you have any
+questions, please don't hesitate to ask us via email. Doxygen
+documentation included in the html subdirectory.
+
+Feel free to use, modify and distribute the code with an appropriate
+acknowledgment of the source, but in all resulting publications please
+include a citation to the above publication (MEDAL Report No. 2008001).
+There is no warranty of any kind for this software.

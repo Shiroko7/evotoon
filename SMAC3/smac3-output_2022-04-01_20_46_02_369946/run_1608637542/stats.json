@@ -1,0 +1,1 @@
+{"submitted_ta_runs": 5000, "finished_ta_runs": 5000, "n_configs": 589, "wallclock_time_used": 56881.02591276169, "ta_time_used": 54527.728575229645, "inc_changed": 7, "_n_configs_per_intensify": 702, "_n_calls_of_intensify": 117, "_ema_n_configs_per_intensifiy": 5.42622950822229, "_EMA_ALPHA": 0.2}
