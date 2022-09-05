@@ -1,0 +1,13 @@
+## model properties might left empty and use default setting infered from parameters number
+layers = 4
+neurons = [4, 4, 4, 4] 
+## available options: https://keras.io/api/losses/
+loss = mean_squared_error
+## available options https://keras.io/api/optimizers/
+optimizer = adam
+## available options https://keras.io/api/layers/activations/
+activation = relu
+## training fit options
+batch_size = 8
+epochs = 50
+validation_split = 0.2

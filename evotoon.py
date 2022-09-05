@@ -6,6 +6,7 @@ from typing import Callable, Dict, List, Tuple
 import numpy as np
 import tensorflow as tf
 import pandas as pd
+import ast
 
 from keras.layers import Dense
 from keras.models import Sequential
@@ -16,17 +17,18 @@ from scipy.stats import friedmanchisquare
 
 import scikit_posthocs as sp
 import os
+import re
 
 
 def trunc_array(array: list, decs=0):
     """
     Function to truncate a numpy array
     """
-    return np.trunc(array * 10 ** decs) / (10 ** decs)
+    return np.trunc(array * 10**decs) / (10**decs)
 
 
 def trun_float(number, decs=0) -> float:
-    step = 10.0 ** decs
+    step = 10.0**decs
     return math.trunc(step * number) / step
 
 
@@ -49,8 +51,8 @@ def choose_instances(path: str, n: int, seed: int):
             if file != ".DS_Store":
                 instances = sorted(os.listdir(file_path))
                 instances = [os.path.join(path, file, ins) for ins in instances]
-                instance_list += instances #random.sample(instances, n)
-                
+                instance_list += instances  # random.sample(instances, n)
+
         elif file.endswith(".tsp"):
             tsp = True
             instance_list.append(path + "/" + file)
@@ -104,7 +106,9 @@ def latin_hypercube_sampling_cat(options: List[str], size: int) -> List:
         points = [random.choice(options) for i in range(size)]
     else:
         # otherwhise the method is made by making a LHS of the indexes of the categorical options list
-        index_sampling = latin_hypercube_sampling_num(0, options_length - 1, size, np.int32)
+        index_sampling = latin_hypercube_sampling_num(
+            0, options_length - 1, size, np.int32
+        )
         points = [options[i] for i in index_sampling]
 
     return points
@@ -206,12 +210,13 @@ def execute_ACOTSP(
         "--dlb",
         str(dlb),
         "--optimum",
-        str(optimum)
+        str(optimum),
     ]
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     output = float(result.stdout.decode("utf-8"))
 
     return output * -1
+
 
 def execute_ACOTSP2(
     instance: str,
@@ -261,12 +266,12 @@ def execute_ACOTSP2(
         "--dlb",
         str(dlb),
         "--optimum",
-        str(optimum)
+        str(optimum),
     ]
     result = subprocess.run(cmd, stdout=subprocess.PIPE)
     output = float(result.stdout.decode("utf-8"))
 
-    return (output/100+1) * optimum * -1
+    return (output / 100 + 1) * optimum * -1
 
 
 def execute_ILSMKP(
@@ -363,20 +368,28 @@ def evaluate_results(result_list: List):
 def pop_n_elem(any_list, n_list):
     new_list = []
     for n in n_list:
-        x = any_list[n]#.pop(n)
+        x = any_list[n]  # .pop(n)
         new_list.append(x)
     return new_list
 
 
 def configuration_evaluation(
-    algorithm: Callable, n_seeds: int, instance_list: List, seed_list: List, optimal_list: List = None, **kwargs
+    algorithm: Callable,
+    n_seeds: int,
+    instance_list: List,
+    seed_list: List,
+    optimal_list: List = None,
+    **kwargs,
 ) -> float:
     """
     interface to call different algorithms to evaluate
     """
     evaluation_keys = ["instance_name", "seed", "score"]
     if optimal_list is not None:
-        random_ins = sorted(random.sample(range(len(instance_list)), n_seeds), reverse=True)
+        random_ins = sorted(
+            random.sample(range(len(instance_list)), n_seeds), reverse=True
+        )
+
         pop_instances = pop_n_elem(instance_list, random_ins)
         pop_seeds = pop_n_elem(seed_list, random_ins)
         pop_optimums = pop_n_elem(optimal_list, random_ins)
@@ -386,7 +399,9 @@ def configuration_evaluation(
             for instance, seed, optimum in zip(pop_instances, seed_list, pop_optimums)
         ]
     else:
-        random_ins = sorted(random.sample(range(len(instance_list)), n_seeds), reverse=True)
+        random_ins = sorted(
+            random.sample(range(len(instance_list)), n_seeds), reverse=True
+        )
         pop_instances = pop_n_elem(instance_list, random_ins)
         pop_seeds = pop_n_elem(seed_list, random_ins)
 
@@ -399,22 +414,42 @@ def configuration_evaluation(
 
 
 def evaluate_batch(
-    batch: pd.DataFrame, batch_evaluations: Dict[int, pd.DataFrame], algorithm: Callable, n_seeds: int, **kwargs
+    batch: pd.DataFrame,
+    batch_evaluations: Dict[int, pd.DataFrame],
+    algorithm: Callable,
+    n_seeds: int,
+    **kwargs,
 ) -> Dict[int, pd.DataFrame]:
     """
     given a batch of configurations and the algorithm to evaluate them
     this function returns a numpy array with its corresponding performing values
     """
+
     batch = batch.drop(columns=["Step_Found"], inplace=False)
+
     for idx, conf in batch.iterrows():
-        batch_evaluations[idx] = configuration_evaluation(algorithm, n_seeds, **{**dict(conf), **kwargs})
+        batch_evaluations[idx] = configuration_evaluation(
+            algorithm, n_seeds, **{**dict(conf), **kwargs}
+        )
     return batch_evaluations
 
 
-def create_model(X_array: list, layers: int=2, neurons: list=[8,4]):
+def create_model(
+    X_array: list,
+    layers: int,
+    neurons: list,
+    activation: str = "relu",
+    loss: str = "mean_squared_error",
+    optimizer: str = "adam",
+    **kwargs
+):
     """
     This function creates the model to be used for tunning
     """
+    if not neurons:
+        neurons = X_array.shape[1]
+    if not layers:
+        layers = math.ceil(X_array.shape[1] ** 0.5)
     if layers != len(neurons):
         raise ValueError("Layers differ to neurons structure lenght")
 
@@ -425,40 +460,30 @@ def create_model(X_array: list, layers: int=2, neurons: list=[8,4]):
             X_array.shape[1],
         ],
     )
-    normalizer.adapt(X_array)
+    normalizer.adapt(X_array.astype(np.float32))
 
     model = Sequential()
     model.add(normalizer)
 
-    model.add(Dense(neurons[0], activation="relu", input_shape=X_array.shape))
+    model.add(Dense(neurons[0], activation=activation, input_shape=X_array.shape))
     for layer in range(1, layers):
-        model.add(Dense(neurons[layer], activation="relu"))
+        model.add(Dense(neurons[layer], activation=activation))
     model.add(Dense(units=1))
 
     # Compile model
-    model.compile(loss="mean_squared_error", optimizer="adam")
+    model.compile(loss=loss, optimizer=optimizer)
     return model
 
 
-# def generate_configurations(model, index_start = 0, **kwargs) -> list:
-#     """
-#     Generates new configurations by selecting random configurations
-#     """
-#     population_size = kwargs["population_size"]
-#     generated_X = pd.DataFrame(initialization(**kwargs))
-
-#     A = model.predict(generated_X.values)
-#     #A = np.squeeze(model.predict(generated_X))
-#     #top_80 = np.percentile(A, 80)
-#     #generated_X = generated_X[np.squeeze(np.argwhere(A > top_80))]
-#     partition_A = np.argpartition(A[:, -1], -population_size//2)[-population_size//2:]
-#     generated_x = generated_X.filter(items = partition_A, axis=0).reset_index(drop=True)
-#     if index_start != 0:
-#         generated_x.index = generated_x.index + index_start
-#     return generated_x
-
-
-def generate_configurations(model, batch, all_params, index_start=0, hc_max_tries=5, hc_p_worse=0.25, update_phase=True) -> list:
+def generate_configurations(
+    model,
+    batch,
+    all_params,
+    index_start=0,
+    hc_max_tries=5,
+    hc_p_worse=0.25,
+    update_phase=True,
+) -> list:
     """
     Generates new configurations by mutating two random genes with a random value.
     """
@@ -468,7 +493,7 @@ def generate_configurations(model, batch, all_params, index_start=0, hc_max_trie
     for _, conf in batch.iterrows():
         # Select random parameter
         n_conf = conf.copy()
-        prediction = model.predict(np.array([n_conf.values]))[0][0]
+        prediction = model.predict(np.array([n_conf.values]).astype(np.float32))[0][0]
 
         # Explore its neighbour by randomly changing it
         look_choice = random.uniform(0, 1)
@@ -487,14 +512,20 @@ def generate_configurations(model, batch, all_params, index_start=0, hc_max_trie
 
             in_generated = False
             if not generated_X.empty:
-                in_generated = any([all(row) for i, row in (generated_X == n_conf).iterrows()])
+                in_generated = any(
+                    [all(row) for i, row in (generated_X == n_conf).iterrows()]
+                )
             in_batch = any([all(row) for i, row in (batch == n_conf).iterrows()])
 
             if not in_batch and not in_generated:
-                n_prediction = model.predict(np.array([n_conf.values]))[0][0]
+                n_prediction = model.predict(
+                    np.array([n_conf.values]).astype(np.float32)
+                )[0][0]
 
                 # Until we find a first expected (predicted) improvement
-                if update_phase and look_choice < hc_p_worse: # chance of prefering worse solutions for diversification
+                if (
+                    update_phase and look_choice < hc_p_worse
+                ):  # chance of prefering worse solutions for diversification
                     if n_prediction <= prediction:
                         break
                 # inmprovement
@@ -517,6 +548,7 @@ def select_configurations_by_ranking(
     instance_list,
     population_size,
     friedman_test=True,
+    alpha=0.05,
 ):
     total_evaluations = {**batch_evaluations, **generated_evaluations}
     cols = ["instance_name"] + [f"conf_{idx}" for idx in total_evaluations]
@@ -533,18 +565,18 @@ def select_configurations_by_ranking(
         df = df.append(new_row, ignore_index=True)
 
     for col in cols[1:]:
-        df[col] = df[col].astype('float64')
+        df[col] = df[col].astype("float64")
 
     df = df.rank(axis=1, numeric_only=True)
 
     if friedman_test:
         # compare samples
         args = tuple(df[conf] for conf in df)
-        
+
         stat, p = friedmanchisquare(*args)
 
         # interpret
-        alpha = 0.05
+
         if p < alpha:
             # Different distributions (reject H0)
             posthoc_matrix = sp.posthoc_conover(
@@ -554,7 +586,7 @@ def select_configurations_by_ranking(
                 p_adjust="holm",
             )
             different_dists = posthoc_matrix.index[
-                posthoc_matrix[df.sum().idxmax()] < 0.05
+                posthoc_matrix[df.sum().idxmax()] < alpha
             ].tolist()
             df.drop(different_dists, axis=1, inplace=True)
 
@@ -562,8 +594,14 @@ def select_configurations_by_ranking(
     best_indexes = [int(idx.replace("conf_", "")) for idx, *_ in best_confs.iteritems()]
     # print(batch, generated_X)
     # print(best_confs, best_indexes)
-    batch = pd.concat([batch, generated_X]).filter(best_indexes, axis=0).reset_index(drop=True)
-    batch_evaluations = {j: total_evaluations[idx] for j, idx in enumerate(best_indexes)}
+    batch = (
+        pd.concat([batch, generated_X])
+        .filter(best_indexes, axis=0)
+        .reset_index(drop=True)
+    )
+    batch_evaluations = {
+        j: total_evaluations[idx] for j, idx in enumerate(best_indexes)
+    }
 
     return batch, batch_evaluations
 
@@ -571,15 +609,25 @@ def select_configurations_by_ranking(
 def select_configurations_by_mean(batch_evaluations, generated_evaluations):
     total_evaluations = {**batch_evaluations, **generated_evaluations}
 
-    total_score = np.array([total_evaluations[i]["score"].mean() for i in total_evaluations])
+    total_score = np.array(
+        [total_evaluations[i]["score"].mean() for i in total_evaluations]
+    )
     best_indexes = np.argpartition(total_score, -population_size)[-population_size:]
 
-    batch = pd.concat([batch, generated_X]).filter(best_indexes, axis=0).reset_index(drop=True)
-    batch_evaluations = {j: total_evaluations[idx] for j, idx in enumerate(best_indexes)}
+    batch = (
+        pd.concat([batch, generated_X])
+        .filter(best_indexes, axis=0)
+        .reset_index(drop=True)
+    )
+    batch_evaluations = {
+        j: total_evaluations[idx] for j, idx in enumerate(best_indexes)
+    }
     return batch, batch_evaluations
 
 
-def naive_tunning(algorithm: Callable, configurations: List[dict], **kwargs) -> Tuple[List, float]:
+def naive_tunning(
+    algorithm: Callable, configurations: List[dict], **kwargs
+) -> Tuple[List, float]:
     """
     simple method to choose the best configuration given a list of configurations
     """
@@ -606,10 +654,10 @@ def evo_tunning(
     initial_batch,
     execute_algorithm,
     model_kwargs,
-    returning_type="RAW_VALUE",
     float_params=[],
     int_params=[],
     cat_params=[],
+    alpha=0.05,
     **function_kwargs,
 ):
     # EVALUATE BATCH
@@ -617,7 +665,9 @@ def evo_tunning(
     batch = pd.DataFrame(initial_batch)
     batch["Step_Found"] = 0
     evaluation_keys = ["instance_name", "seed", "score"]
-    batch_evaluations = {idx: pd.DataFrame(columns=evaluation_keys) for idx, *_ in batch.iterrows()}
+    batch_evaluations = {
+        idx: pd.DataFrame(columns=evaluation_keys) for idx, *_ in batch.iterrows()
+    }
     batch_evaluations = evaluate_batch(
         batch, batch_evaluations, execute_algorithm, n_seeds, **function_kwargs
     )
@@ -629,7 +679,14 @@ def evo_tunning(
 
     # Create model (this should consider the instance label)
     model = create_model(X, **model_kwargs)
-    history = model.fit(X, y, batch_size=8, epochs=25, verbose=0, validation_split=0.2)
+    history = model.fit(
+        X.astype(np.float32),
+        y,
+        batch_size=model_kwargs["batch_size"],
+        epochs=model_kwargs["epochs"],
+        validation_split=model_kwargs["validation_split"],
+        verbose=0,
+    )
 
     # Set queue to update
     reserve_X = pd.DataFrame()
@@ -641,7 +698,15 @@ def evo_tunning(
         print("Budget left", cur_budget)
         update_phase = cur_budget > budget / 2
         # Generate new random configurations
-        generated_X = generate_configurations(model, batch, all_params, population_size, hc_max_tries, hc_p_worse, update_phase)
+        generated_X = generate_configurations(
+            model,
+            batch,
+            all_params,
+            population_size,
+            hc_max_tries,
+            hc_p_worse,
+            update_phase,
+        )
         generated_X["Step_Found"] = i
         # Evaluate them
         generated_evaluations = {
@@ -649,29 +714,36 @@ def evo_tunning(
             for idx in range(population_size, population_size + len(generated_X))
         }
         generated_evaluations = evaluate_batch(
-            generated_X, generated_evaluations, execute_algorithm, n_seeds, **function_kwargs
+            generated_X,
+            generated_evaluations,
+            execute_algorithm,
+            n_seeds,
+            **function_kwargs,
         )
 
-        cur_budget = cur_budget - len(generated_X) * 5
+        cur_budget = cur_budget - len(generated_X) * n_seeds
 
         generated_y = np.array(
             [generated_evaluations[i]["score"].mean() for i in generated_evaluations]
         )
 
         # Update mode
-        if  update_phase and i % update_cycle == 0:
-            history = model.fit(
-                generated_X.drop(columns=["Step_Found"], inplace=False),
-                generated_y,
-                epochs=50,
-                verbose=0,
-                validation_split=0.2,
-            )
-            reserve_X = pd.DataFrame()
-            reserve_y = np.array([])
-        # else:
-        #     reserve_X = pd.concat([reserve_X, generated_X]).reset_index(drop=True)
-        #     reserve_y = np.concatenate((reserve_y, generated_y))
+        if update_phase:
+            reserve_X = pd.concat([reserve_X, generated_X]).reset_index(drop=True)
+            reserve_y = np.concatenate((reserve_y, generated_y))
+            if i % update_cycle == 0:
+                model.fit(
+                    reserve_X.drop(columns=["Step_Found"], inplace=False).astype(
+                        np.float32
+                    ),
+                    reserve_y,
+                    batch_size=model_kwargs["batch_size"],
+                    epochs=model_kwargs["epochs"],
+                    validation_split=model_kwargs["validation_split"],
+                    verbose=0,
+                )
+                reserve_X = pd.DataFrame()
+                reserve_y = np.array([])
 
         # Select configurations for next step
         batch, batch_evaluations = select_configurations_by_ranking(
@@ -682,12 +754,15 @@ def evo_tunning(
             function_kwargs["instance_list"],
             population_size,
             friedman_test=True,
+            alpha=alpha,
         )
 
         # Fill if we don't have enough solutions
         if len(batch) < population_size:
             fillers = pd.DataFrame(
-                initialization(population_size - len(batch), float_params, int_params, cat_params)
+                initialization(
+                    population_size - len(batch), float_params, int_params, cat_params
+                )
             )
             fillers["Step_Found"] = i
             fillers_evaluations = {
@@ -695,7 +770,11 @@ def evo_tunning(
                 for idx in range(population_size - len(batch), population_size)
             }
             fillers_evaluations = evaluate_batch(
-                fillers, fillers_evaluations, execute_algorithm, n_seeds, **function_kwargs
+                fillers,
+                fillers_evaluations,
+                execute_algorithm,
+                n_seeds,
+                **function_kwargs,
             )
 
             cur_budget = cur_budget - len(fillers) * n_seeds
@@ -705,111 +784,178 @@ def evo_tunning(
 
         i += 1
 
-    batch["VALUE"] = np.array([batch_evaluations[i]["score"].mean() for i in batch_evaluations])
-    if returning_type == "ABSOLUTE_OPTIMAL_DIFF":
-        batch["VALUE"] = batch["VALUE"] * -1
+    batch["VALUE"] = np.array(
+        [batch_evaluations[i]["score"].mean() for i in batch_evaluations]
+    )
+
     batch = batch.sort_values(by=["VALUE"])
 
     return batch
 
 
+def read_parameters(file_path):
+    file = open(file_path, "r")
+    cat_params = []
+    float_params = []
+    int_params = []
+
+    for line in file:
+        line = line.rstrip()
+        if line and not line.startswith("##"):
+            name, type = line.split()[0:2]
+            if type == "c":
+                values = (
+                    line.replace("(", "").replace(")", "").replace(",", "").split()[2:]
+                )
+                cat_params.append(CatParam(name, values))
+            elif type == "r":
+                min, max, precision = (
+                    line.replace("(", "").replace(")", "").replace(",", "").split()[2:]
+                )
+                float_params.append(
+                    FloatParam(name, float(min), float(max), int(precision))
+                )
+            elif type == "i":
+                min, max = (
+                    line.replace("(", "").replace(")", "").replace(",", "").split()[2:]
+                )
+                int_params.append(IntParam(name, int(min), int(max)))
+            else:
+                raise ValueError("unkown parameter type in parameters file")
+
+    all_params = float_params + int_params + cat_params
+    all_params = {param.name: param for param in all_params}
+
+    return all_params, float_params, int_params, cat_params
+
+
+def read_setup_file(file_path):
+    file = open(file_path, "r")
+    setup = {}
+    for line in file:
+        line = line.rstrip()
+        if line and not line.startswith("##"):
+            key, val = re.split("\s+=\s+", line)
+            setup[key] = val
+    return setup
+
+
+def read_model(file_path):
+    model =  read_setup_file(file_path)
+
+    model_kwargs = {}
+    if model.get("layers"):
+        model_kwargs["layers"] = int(model["layers"])
+    if model.get("neurons"):
+        model_kwargs["neurons"] = ast.literal_eval(model["neurons"])
+    if model.get("loss"):
+        model_kwargs["loss"] = model["loss"]
+    else:
+        model_kwargs["loss"] = "mean_squared_error"
+    if model.get("optimizer"):
+        model_kwargs["optimizer"] = model["optimizer"]
+    else:
+        model_kwargs["optimizer"] = "adam"
+    if model.get("activation"):
+        model_kwargs["activation"] = model["activation"]
+    else:
+        model_kwargs["activation"] = "relu"
+    if model.get("batch_size"):
+        model_kwargs["batch_size"] = int(model["batch_size"])
+    else:
+        model_kwargs["batch_size"] = 8
+    if model.get("epochs"):
+        model_kwargs["epochs"] = int(model["epochs"])
+    else:
+        model_kwargs["epochs"] = 50
+    if model.get("validation_split"):
+        model_kwargs["validation_split"] = float(model["validation_split"])
+    else:
+        model_kwargs["validation_split"] = 0.2
+
+    return model_kwargs
+
+
+def read_instance_list(file_path):
+    return [f"{file_path}/{f}" for f in os.listdir(file_path)]
 
 
 
+def import_executer(file_path, func_name):
+    spec = importlib.util.spec_from_file_location("executer", file_path)
+    foo = importlib.util.module_from_spec(spec)
+    sys.modules["executer"] = foo
+    spec.loader.exec_module(foo)
+    return getattr(foo, func_name)
 
 
-#PSEUDO CODES FOR ME
-# EVOTOON(max_budget, population_size, update_cycle, n_seeds, hc_p_worse, hc_max_tries)
-# # INITIALIZE INITIAL population
-# batch <- LHS(population_size)
-# batch_evaluation <- evaluate(batch)
-# # CREATE MODEL
-# model <- instanciate_model()
-# model <- fit_model(batch, batch_evaluation)
-# # MAIN LOOP
-# current_budget <- max_budget
-# it <- 0
-# stored_batch <- {}
-# stored_batch_evaluation <- {}
-# While current_budget > 0
-#     generated_batch <- generate_batch(model, batch, population_size, hc_p_worse, hc_max_tries)
-#     generated_batch_evaluation <- evaluate(generated_batch)
+if __name__ == "__main__":
+    import sys
+    import warnings
+    import importlib.util
 
-#     if not(current_budge > max_budget/2 and it MOD update_cycle = 0): #
-#         stored_batch <- stored_batch U generated_batch
-#         stored_batch_evaluation <- stored_batch_evaluation U generated_batch_evaluation
-#     else:
-#         model <- fit_model(stored_batch, stored_batch_evaluation) 
-#         stored_batch <- {}
-#         stored_batch_evaluation <- {}
+    warnings.simplefilter(action="ignore", category=FutureWarning)
 
-#     batch <- select_configurations_by_ranking(batch, batch_evaluations, generated_batch, generated_batch_evaluation, population_size)
+    setup_path = sys.argv[1]
+    SEED = int(sys.argv[2])
 
-#     current_budget <- current_budget - (n_seeds * population_size * len_instances)
-#     it <- it + 1
+    scenario = read_setup_file(setup_path + "/scenario.txt")
+    alg_funct = import_executer(
+        scenario["executer_file"], scenario["executer_function"]
+    )
 
+    budget = int(scenario["budget"])
+    population_size = int(scenario["population_size"])
+    update_cycle = int(scenario["update_cycle"])
+    hc_max_tries = int(scenario["hc_max_tries"])
+    hc_p_worse = float(scenario["hc_p_worse"])
+    n_seeds = int(scenario["n_seeds"])
+    alpha = float(scenario["alpha"])
 
+    all_params, float_params, int_params, cat_params = read_parameters(
+        setup_path + "/parameters.txt"
+    )
 
-# generate_batch(model, batch, hc_p_worse, hc_max_tries)
+    if scenario.get("initial_batch"):
+        initial_batch = scenario["initial_batch"]
+    else:
+        initial_batch = initialization(
+            population_size, float_params, int_params, cat_params
+        )
 
-# generated_batch <- {}
+    instance_list = read_instance_list(scenario["instances_folder"])
+    instance_list, seed_list = select_seeds(instance_list, n_seeds, SEED)
 
-# for conf in batch:
-#     new_conf <- conf.copy()
-#     best_conf <- conf.copy()
-#     prediction <- model.predict(conf)
-#     best_prediction <- model.predict(conf)
-#     look_choice <- random.uniform(0,1)
-#     for i in range(max_tries): # Hill Climbingt
-#         random_param <- random.randint(0, len_batch-1)
-#         if random_param is int:
-#             new_conf[random_param] <- random.randint(param_min, param_max)
-#         elif random_param is float:
-#             new_conf[random_param] <- random.uniform(param_min, param_max)
-#         elif random_param is categorical:
-#             new_conf[random_param] <- param_valus[random.randint(0, len_param_values-1)]
+    function_kwargs = {
+        "executable_path": "ACOTSP-master/acotsp",
+        "instance_list": instance_list,
+        "seed_list": seed_list,
+    }
+    if scenario.get("optimal_file"):
+        optimal_list = read_setup_file(scenario["optimal_file"])
+        function_kwargs["optimal_list"] = [
+            optimal_list[instance.split(".")[0].split("/")[-1]]
+            for instance in instance_list
+        ]
 
-#         if new_conf not in batch and new_conf not in generated_batch:
-#             new_prediction <- model.predict(new_conf)
+    model_kwargs = read_model(setup_path + "/model.txt")
 
-#             if look_choice > hc_p_worse:
-#                 if new_prediction >= best_prediction:
-#                     best_conf <- new_conf
-#                 if n_prediction >= prediction:
-#                     break
-#             else:
-#                 if new_prediction <= best_prediction:
-#                     best_conf <- new_conf
-#                 if new_prediction <= prediction:
-#                     break
-
-
-#     generated_batch <- generated_batch U best_conf
-        
-# return generated_batch
-
-
-# select_configurations_by_ranking(batch, batch_evaluations, generated_batch, generated_evaluations, population_size, p_value)
-
-# total_evaluations <- batch_evaluations U generated_evaluations
-
-# rank_evaluations <- {}
-# for instance in instance_list:
-#     rank_evaluations <- rank_evaluations U get_mean_score(instance, total_evaluations)
-
-# rank_evaluations <- rank_evaluations.rank()
-
-# stat, p <- friedmanchisquare(rank_evaluations)
-
-# if p < p_value:
-#     posthoc_matrix <- posthoc_conover(rank_evaluations)
-#     different_dists <- filter_confs(posthoc_matrix, p_value)
-#     best_confs <- rank_evaluations \ different_dists
-
-# if len_batch_confs >= population_size:
-#     best_confs <- best_confs.nlargest(population_size)
-# else:
-#     best_confs <- rank_evaluations.nlargest(population_size)
-
-
-# return best_confs
+    print(
+        evo_tunning(
+            all_params=all_params,
+            float_params=float_params,
+            int_params=int_params,
+            cat_params=cat_params,
+            budget=budget,
+            population_size=population_size,
+            update_cycle=update_cycle,
+            hc_max_tries=hc_max_tries,
+            hc_p_worse=hc_p_worse,
+            n_seeds=n_seeds,
+            initial_batch=initial_batch,
+            execute_algorithm=alg_funct,
+            model_kwargs=model_kwargs,
+            alpha=alpha,
+            **function_kwargs,
+        )
+    )

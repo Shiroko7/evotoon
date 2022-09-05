@@ -1,0 +1,24 @@
+## Scenario setup for EVOTOON
+
+## Directory where tuning instances are located (relative to executing path)
+instances_folder = Instancias/TRAIN_tsp
+
+## optimal list if available
+optimal_file = evotoon-setup-acotsp/optimal_solutions.txt
+
+## target executer
+executer_file = evotoon-setup-acotsp/execute_acotsp.py
+executer_function = execute_ACOTSP
+
+## The maximum number of runs (invocations of targetRunner) that will performed.
+budget = 150
+
+## hyperparameters
+population_size = 10
+update_cycle = 2
+hc_max_tries = 50
+hc_p_worse = 0.7
+n_seeds = 3
+
+## alpha value for friedman test
+alpha = 0.05

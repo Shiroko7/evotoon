@@ -1,0 +1,10 @@
+## Parameter file for the ACOTSP software
+## name      type values        precision
+localsearch c    (0, 1, 2, 3)
+alpha       r    (0.00, 10.00) 3
+beta        r    (0.00, 10.00) 3
+rho         r    (0.01, 1.00)  3
+ants        i    (5, 100)
+elitistants i    (1, 750)
+nnls        i    (5, 50)             
+dlb         c    (0, 1)              
