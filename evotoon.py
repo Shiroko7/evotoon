@@ -10,7 +10,7 @@ import ast
 
 from keras.layers import Dense
 from keras.models import Sequential
-from tensorflow.keras.layers.experimental import preprocessing
+from keras import layers as preprocessing
 
 from data_classes import CatParam, FloatParam, IntParam
 from scipy.stats import friedmanchisquare
@@ -501,14 +501,14 @@ def generate_configurations(
             random_choice = random.randint(0, len(batch.columns) - 1)
             param = all_params[batch.columns[random_choice]]
             if isinstance(param, IntParam):
-                n_conf[random_choice] = random.randint(param.min_val, param.max_val)
+                n_conf.iloc[random_choice] = random.randint(param.min_val, param.max_val)
             elif isinstance(param, FloatParam):
-                n_conf[random_choice] = random.uniform(param.min_val, param.max_val)
+                n_conf.iloc[random_choice] = random.uniform(param.min_val, param.max_val)
                 # truncate
-                n_conf[random_choice] = trun_float(n_conf[random_choice], param.decs)
+                n_conf.iloc[random_choice] = trun_float(n_conf.iloc[random_choice], param.decs)
             else:
                 choice = random.randint(0, len(param.values) - 1)
-                n_conf[random_choice] = param.values[choice]
+                n_conf.iloc[random_choice] = param.values[choice]
 
             in_generated = False
             if not generated_X.empty:
@@ -533,7 +533,7 @@ def generate_configurations(
                     if n_prediction >= prediction:
                         break
 
-        generated_X = generated_X.append(n_conf, ignore_index=True)
+        generated_X = pd.concat([generated_X, n_conf.to_frame().T], ignore_index=True)
 
     if index_start != 0:
         generated_X.index = generated_X.index + index_start
@@ -562,7 +562,7 @@ def select_configurations_by_ranking(
             for idx in total_evaluations
         }
         new_row = {**{"instance_name": instance_name}, **evaluation_dict}
-        df = df.append(new_row, ignore_index=True)
+        df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
 
     for col in cols[1:]:
         df[col] = df[col].astype("float64")
@@ -591,7 +591,7 @@ def select_configurations_by_ranking(
             df.drop(different_dists, axis=1, inplace=True)
 
     best_confs = df.sum().nlargest(population_size)
-    best_indexes = [int(idx.replace("conf_", "")) for idx, *_ in best_confs.iteritems()]
+    best_indexes = [int(idx.replace("conf_", "")) for idx, *_ in best_confs.items()]
     # print(batch, generated_X)
     # print(best_confs, best_indexes)
     batch = (
@@ -835,7 +835,7 @@ def read_setup_file(file_path):
     for line in file:
         line = line.rstrip()
         if line and not line.startswith("##"):
-            key, val = re.split("\s+=\s+", line)
+            key, val = re.split(r"\s+=\s+", line)
             setup[key] = val
     return setup
 

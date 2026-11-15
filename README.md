@@ -13,7 +13,7 @@
 - comments on setup txt files are denoted by ##
 
 Requirements:
-- Python 3.8+
+- Python 3.12
 - numpy
 - pandas
 - matplotlib
@@ -29,3 +29,5 @@ python evotoon.py setup_path SEED
 IE:
 python evotoon.py evotoon-setup-acotsp/ 123
 
+
+Dependency upgrades, installation and compatibility checks are documented in [SECURITY_MAINTENANCE.md](SECURITY_MAINTENANCE.md).
